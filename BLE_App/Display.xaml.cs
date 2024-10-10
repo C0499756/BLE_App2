@@ -9,4 +9,9 @@ public partial class Display : ContentPage
 	{
 		InitializeComponent();
 	}
+
+    private void foundBleServs_ItemTapped(object sender, ItemTappedEventArgs e)
+    {
+
+    }
 }

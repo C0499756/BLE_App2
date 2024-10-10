@@ -2,11 +2,17 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="BLE_App.Display"
-             Title="Select BLE Service">
-    <VerticalStackLayout>
-        <Label 
-            Text="Welcome to the Display Page"
-            VerticalOptions="Center" 
-            HorizontalOptions="Center" />
-    </VerticalStackLayout>
+             Title="Select BLE Service"
+             Visual="Default">
+    <ContentPage.Content>
+        <VerticalStackLayout>
+            <!--Display Selected BLE Device-->
+        <Label Text="Selected BLE Device"
+               x:Name="bleDevice"/>
+        <Label Text="Services"/>
+            <!--The list below shows the services available on the selected BLE device-->
+        <ListView x:Name="foundBleServs"
+                  ItemTapped="foundBleServs_ItemTapped"/>
+        </VerticalStackLayout>
+    </ContentPage.Content>
 </ContentPage>
