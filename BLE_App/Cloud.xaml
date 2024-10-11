@@ -8,5 +8,11 @@
             Text="Welcome to the Cloud Page!"
             VerticalOptions="Center" 
             HorizontalOptions="Center" />
+        <Label 
+            x:Name="LocationLabel" 
+            Text="Location: Not Available" 
+            VerticalOptions="Center" 
+            HorizontalOptions="Center" 
+            FontSize="Medium" />
     </VerticalStackLayout>
 </ContentPage>
