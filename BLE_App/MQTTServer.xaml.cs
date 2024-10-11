@@ -1,7 +1,7 @@
-using MQTTnet;
+
+
 using MQTTnet.Client;
-
-
+using MQTTnet;
 
 namespace BLE_App
 {
@@ -62,7 +62,7 @@ namespace BLE_App
 
         }
 
-        private void send_clicked(object sender, EventArgs e)
+        private void Send_clicked(object sender, EventArgs e)
         {
             PublishMessage(MsgTx);
         }

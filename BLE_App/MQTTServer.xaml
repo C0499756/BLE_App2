@@ -3,43 +3,25 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="BLE_App.MQTTServer"
              Title="MQTTServer">
-    
-    <ScrollView>
-        <VerticalStackLayout
+
+    <VerticalStackLayout
             Padding="10">
 
-            <HorizontalStackLayout
-            Spacing="5"
-            Padding="5">
-                <Label
-            Text=" MQTT"
-            TextColor="Black"
-            FontSize="Medium"
-            FontAttributes="Bold"
-            
-            BackgroundColor="White"
-            WidthRequest="200"/>
 
-                <Button
+
+        <Button
             x:Name="send"
             Text="Send"
-            TextColor="Black"
-            Clicked="send_clicked"
-            BackgroundColor="White"
-            WidthRequest="105"/>
-
-            </HorizontalStackLayout>
-
-            <Label
+            Clicked="Send_clicked"/>
+        <Label
             x:Name="lblConnected"
-            TextColor="White"/>
-            <Label
+            TextColor="Black"/>
+        <Label
             x:Name="lblMessage"
-            TextColor="White"   />
-            <!--<Label
+            TextColor="Black"   />
+        <!--<Label
          x:Name="lblReceived"/>-->
 
-        </VerticalStackLayout>
-    </ScrollView>
-    
+    </VerticalStackLayout>
+
 </ContentPage>
