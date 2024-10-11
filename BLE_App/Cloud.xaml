@@ -14,5 +14,11 @@
             VerticalOptions="Center" 
             HorizontalOptions="Center" 
             FontSize="Medium" />
+        <Label 
+            x:Name="AccelerometerLabel" 
+            Text="Accelerometer: Not Available" 
+            VerticalOptions="Center" 
+            HorizontalOptions="Center" 
+            FontSize="Medium" />
     </VerticalStackLayout>
 </ContentPage>
