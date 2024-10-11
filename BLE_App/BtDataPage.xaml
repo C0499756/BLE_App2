@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="BLE_App.BtDataPage"
+             Title="Send and Receive data via BLE">
+
+    <VerticalStackLayout>
+        <!--Display selected BLE device and BLE service-->
+        <Label 
+            Text="Selected Bluetooth Device"
+            x:Name="bleDevice"/>
+        <Label
+            Text="Selected BLE Service"
+            x:Name="bleService"/>
+        <!--Label to show details of selected Characteristic-->
+        <Label
+           Text="Characteristics"/>
+        <ListView
+            x:Name="foundBleChars"
+            ItemTapped="FoundBleChars_ItemTapped"/>
+        <!--Label to show details of selected Characteristic-->
+        <Label Text="No Characteristic selected"
+               x:Name="bleChar"/>
+        <ScrollView
+            VerticalOptions="StartAndExpand">
+            <Label
+                x:Name="Output"
+                TextColor="DarkBlue"
+                VerticalOptions="EndAndExpand"/>
+        </ScrollView>
+        <!--Label to show error messages -->
+        <Label
+            Text=""
+            TextColor="DarkRed"
+            x:Name="ErrorLabel"/>
+        <!--Entry textfield to insert Strings to send to Characteristics-->
+        <Entry
+            x:Name="CommandTxt"
+            Text="Type Here"/>
+        <!--Buttons to send/receive/register to Characteristics-->
+        <StackLayout 
+            Margin="0,0,0,0">
+            <HorizontalStackLayout x:Name="ScanButton" >
+                <Button
+                    Text="Receive" 
+                    Clicked="ReceiveButton_Clicked"/>
+                <Button
+                    Text="Send" 
+                    Clicked="SendButton_Clicked"/>
+                <Button
+                    Text="Register" 
+                    Clicked="RegisterButton_Clicked"/>
+            </HorizontalStackLayout>
+        </StackLayout>
+    </VerticalStackLayout>
+</ContentPage>

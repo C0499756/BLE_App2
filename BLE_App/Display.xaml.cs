@@ -1,5 +1,3 @@
-using AudioToolbox;
-using AVFoundation;
 using Plugin.BLE.Abstractions;
 using Plugin.BLE.Abstractions.Contracts;
 using System;
@@ -50,6 +48,10 @@ public partial class Display : ContentPage
 	}
     private async void foundBleServs_ItemTapped(object sender, ItemTappedEventArgs e)
     {
-
+		var selectedService = _servicesList[e.ItemIndex];
+		if(selectedService!= null)
+		{
+			await Navigation.PushAsync(new BtDataPage(_connectedDevice, selectedService));
+		}
     }
 }

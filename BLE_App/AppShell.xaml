@@ -8,6 +8,15 @@
     Shell.FlyoutBehavior="Disabled"
     Title="BLE_App">
 
+    <Shell.Resources>
+        <Style TargetType="Shell">
+            <Setter Property="Shell.BackgroundColor" Value="Green"/>
+            <!-- Set title bar color -->
+            <Setter Property="Shell.TitleColor" Value="Green"/>
+            <!-- Optional: Change title text color. This is not working as of now!!!! -->
+        </Style>
+    </Shell.Resources>
+
     <TabBar>
         <ShellContent Title="Devices" 
                       ContentTemplate="{DataTemplate local:MainPage}" 
@@ -18,3 +27,4 @@
     </TabBar>
 
 </Shell>
+
