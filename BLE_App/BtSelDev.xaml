@@ -1,0 +1,32 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+    
+<!--This code is adapted from MoThunderz's Xamarin BLE App for Android (versions 12 and higher). 
+Modified for .NET MAUI to meet the requirements of the Wireless Automotive Telemetry System. 
+Code modified by the Laplogic Team. For more details, see the video: https://www.youtube.com/watch?v=SfGuLsKeOeE-->
+    
+<!--Main user interface for app, likely to be the first page users open. This page will be where the users scan and connect to our bluetooth device-->
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="BLE_App.MainPage"
+             Title="Select BLE Device">
+
+    <Grid>
+        <StackLayout Orientation="Vertical">
+            <!--Refresh BLE devices in the list-->
+            <Button
+                x:Name="ScanBtn"
+                Margin="10"
+                Text="Scan" 
+                Clicked="ScanBtn_Clicked"/>
+            <!--ListView is the list that will be filled with the BLE devices detected-->
+            <ListView x:Name="foundBleDevicesListView"
+                  Footer=""
+                  ItemTapped="foundBleDevicesListView_ItemTapped"/>
+        </StackLayout>
+        <!--circle seen when scan button is clicked-->
+        <ActivityIndicator x:Name="IsBusyIndicator"
+                       Scale="0.3"/>
+    </Grid>
+
+</ContentPage>
+

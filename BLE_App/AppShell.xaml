@@ -21,6 +21,9 @@
         <ShellContent Title="Devices" 
                       ContentTemplate="{DataTemplate local:MainPage}" 
                       Route="MainPage" />
+        <ShellContent Title="Position" 
+                      ContentTemplate="{DataTemplate local:Cloud}" 
+                      Route="Position" />
         <ShellContent Title="Cloud" 
                       ContentTemplate="{DataTemplate local:Cloud}" 
                       Route="Cloud" />

@@ -1,3 +1,7 @@
+// This code is adapted from MoThunderz's Xamarin BLE App for Android (versions 12 and higher). 
+// Modified for .NET MAUI to meet the requirements of the Wireless Automotive Telemetry System. 
+// Code modified by the Laplogic Team. For more details, see the video: https://www.youtube.com/watch?v=SfGuLsKeOeE
+
 using Microsoft.Maui.Animations;
 using Plugin.BLE.Abstractions;
 using Plugin.BLE.Abstractions.Contracts;

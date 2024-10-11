@@ -33,7 +33,7 @@ public partial class Cloud : ContentPage
 
                 if (location != null)
                 {
-                    LocationLabel.Text = $"Latitude: {location.Latitude}, Longitude: {location.Longitude}";
+                    LocationLabel.Text = $"Latitude: {location.Latitude}, \nLongitude: {location.Longitude}";
                 }
                 else
                 {

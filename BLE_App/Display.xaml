@@ -1,4 +1,9 @@
 <?xml version="1.0" encoding="utf-8" ?>
+    
+<!--This code is adapted from MoThunderz's Xamarin BLE App for Android (versions 12 and higher). 
+Modified for .NET MAUI to meet the requirements of the Wireless Automotive Telemetry System. 
+Code modified by the Laplogic Team. For more details, see the video: https://www.youtube.com/watch?v=SfGuLsKeOeE-->
+    
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="BLE_App.Display"
