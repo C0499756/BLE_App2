@@ -5,11 +5,11 @@ using Microsoft.Maui.Controls;
 
 namespace BLE_App;
 
-public partial class Cloud : ContentPage
+public partial class PositionData : ContentPage
 {
     private CancellationTokenSource _cts;
 
-    public Cloud()
+    public PositionData()
     {
         InitializeComponent();
         StartLocationUpdates();

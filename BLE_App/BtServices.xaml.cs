@@ -13,12 +13,12 @@ using System.Text;
 
 namespace BLE_App;
 
-public partial class Display : ContentPage
+public partial class BtServices : ContentPage
 {
 	private IDevice _connectedDevice; //BLE device we are connected to
 	private List<IService> _servicesList = new List<IService>(); //list of services that BLE device has
 
-	public Display(IDevice connectedDevice) //gets a parameter, the BLE device we connected to
+	public BtServices(IDevice connectedDevice) //gets a parameter, the BLE device we connected to
 	{
 		InitializeComponent();
 

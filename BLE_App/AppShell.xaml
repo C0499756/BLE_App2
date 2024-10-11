@@ -10,23 +10,23 @@
 
     <Shell.Resources>
         <Style TargetType="Shell">
-            <Setter Property="Shell.BackgroundColor" Value="Green"/>
+            <Setter Property="Shell.BackgroundColor" Value="Blue"/>
             <!-- Set title bar color -->
-            <Setter Property="Shell.TitleColor" Value="Green"/>
+            <Setter Property="Shell.TitleColor" Value="Blue"/>
             <!-- Optional: Change title text color. This is not working as of now!!!! -->
         </Style>
     </Shell.Resources>
 
     <TabBar>
         <ShellContent Title="Devices" 
-                      ContentTemplate="{DataTemplate local:MainPage}" 
-                      Route="MainPage" />
+                      ContentTemplate="{DataTemplate local:BtDevices}" 
+                      Route="Devices" />
         <ShellContent Title="Position" 
-                      ContentTemplate="{DataTemplate local:Cloud}" 
+                      ContentTemplate="{DataTemplate local:PositionData}" 
                       Route="Position" />
-        <ShellContent Title="Cloud" 
-                      ContentTemplate="{DataTemplate local:Cloud}" 
-                      Route="Cloud" />
+        <ShellContent Title="Server" 
+                      ContentTemplate="{DataTemplate local:MQTTServer}" 
+                      Route="Server" />
     </TabBar>
 
 </Shell>

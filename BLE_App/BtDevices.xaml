@@ -2,7 +2,7 @@
 <!--Main user interface for app, likely to be the first page users open. This page will be where the users scan and connect to our bluetooth device-->
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             x:Class="BLE_App.MainPage"
+             x:Class="BLE_App.BtDevices"
              Title="Select BLE Device">
 
     <Grid>

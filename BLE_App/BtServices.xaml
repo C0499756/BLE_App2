@@ -6,7 +6,7 @@ Code modified by the Laplogic Team. For more details, see the video: https://www
     
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             x:Class="BLE_App.Display"
+             x:Class="BLE_App.Services"
              Title="Select BLE Service">
     <ContentPage.Content>
         <VerticalStackLayout>

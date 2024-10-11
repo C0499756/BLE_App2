@@ -10,12 +10,12 @@ using System.Threading.Tasks;
 
 namespace BLE_App
 {
-    public partial class MainPage : ContentPage
+    public partial class BtDevices : ContentPage
     {
         private IAdapter _bluetoothAdapter;
         private List<IDevice> _gattDevices = new List<IDevice>();
 
-        public MainPage()
+        public BtDevices()
         {
             InitializeComponent();
 
@@ -79,7 +79,7 @@ namespace BLE_App
 
             if(selectedItem.State == DeviceState.Connected)
             {
-                await Navigation.PushAsync(new Display(selectedItem));
+                await Navigation.PushAsync(new BtServices(selectedItem));
             }
             else
             {
@@ -87,7 +87,7 @@ namespace BLE_App
                 {
                 var connectParameters = new ConnectParameters(false, true);
                 await _bluetoothAdapter.ConnectToDeviceAsync(selectedItem, connectParameters);
-                await Navigation.PushAsync(new Display(selectedItem));
+                await Navigation.PushAsync(new BtServices(selectedItem));
                 }
                 catch
                 {
