@@ -26,12 +26,10 @@ Code modified by the Laplogic Team. For more details, see the video: https://www
         <!--Label to show details of selected Characteristic-->
         <Label Text="No Characteristic selected"
                x:Name="bleChar"/>
-        <ScrollView
-            VerticalOptions="StartAndExpand">
+        <ScrollView x:Name="OutputScrollView" HeightRequest="300">
             <Label
                 x:Name="Output"
-                TextColor="DarkBlue"
-                VerticalOptions="EndAndExpand"/>
+                TextColor="DarkBlue"/>
         </ScrollView>
         <!--Label to show error messages -->
         <Label
@@ -41,7 +39,9 @@ Code modified by the Laplogic Team. For more details, see the video: https://www
         <!--Entry textfield to insert Strings to send to Characteristics-->
         <Entry
             x:Name="CommandTxt"
-            Text="Type Here"/>
+            Placeholder="Type Here"
+            TextColor="Black"
+            TextChanged="CommandTxt_TextChanged"/>
         <!--Buttons to send/receive/register to Characteristics-->
         <StackLayout 
             Margin="0,0,0,0">

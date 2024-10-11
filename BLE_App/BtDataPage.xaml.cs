@@ -150,6 +150,14 @@ public partial class BtDataPage : ContentPage
         }
     }
 
+    private async void ShowError(string message)
+    {
+        ErrorLabel.Text = message;
+        await Task.Delay(60000); // Wait for 10 seconds
+        ErrorLabel.Text = ""; // Clear the error message
+    }
+
+
     private async void ReceiveButton_Clicked(object sender, EventArgs e)
     {
         try
@@ -163,6 +171,10 @@ public partial class BtDataPage : ContentPage
                 if (receivedBytes != null && receivedBytes.Length > 0)
                 {
                     Output.Text += Encoding.UTF8.GetString(receivedBytes) + Environment.NewLine;
+
+                    // Scroll to the bottom of the ScrollView
+                    await Task.Delay(100); // Optional delay for better scrolling
+                    await OutputScrollView.ScrollToAsync(0, Output.Height, true);
                 }
                 else
                 {
@@ -171,12 +183,12 @@ public partial class BtDataPage : ContentPage
             }
             else
             {
-                ErrorLabel.Text = GetTimeNow() + ": No Characteristic selected.";
+                ShowError(GetTimeNow() + ": No Characteristic selected.");
             }
         }
         catch
         {
-            ErrorLabel.Text = GetTimeNow() + ": Error receiving Characteristic. ";
+            ShowError(GetTimeNow() + ": Error receiving Characteristic. ");
         }
     }
 
@@ -188,4 +200,16 @@ public partial class BtDataPage : ContentPage
         return timestamp.Hour.ToString() + ":" + timestamp.Minute.ToString() + ":" + timestamp.Second.ToString();
     }
 
+    private void CommandTxt_TextChanged(object sender, TextChangedEventArgs e)
+    {
+        if (string.IsNullOrWhiteSpace(CommandTxt.Text))
+        {
+            CommandTxt.TextColor = Colors.Gray; //Color to indicate placeholder text
+        }
+        else
+        {
+            CommandTxt.TextColor = Colors.Black; // Change back to normal text color
+        }
+
+    }
 }
