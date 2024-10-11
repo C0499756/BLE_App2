@@ -1,3 +1,4 @@
+using Microsoft.Maui.Animations;
 using Plugin.BLE.Abstractions;
 using Plugin.BLE.Abstractions.Contracts;
 using System;
@@ -50,19 +51,19 @@ public partial class BtDataPage : ContentPage
             }
             else
             {
-                
+
             }
 
         }
         catch
         {
-            ErrorLabel.Text += GetTimeNow() + ": Error intializing UART GATT service.";  
+            ErrorLabel.Text += GetTimeNow() + ": Error intializing UART GATT service.";
         }
     }
 
     private async void FoundBleChars_ItemTapped(object sender, ItemTappedEventArgs e)
     {
-        if(_selectedService != null)
+        if (_selectedService != null)
         {
             _char = _charList[e.ItemIndex];
             bleChar.Text = _char.Name + "\n" +
@@ -78,7 +79,7 @@ public partial class BtDataPage : ContentPage
         }
     }
 
-    private async void ReceiveButton_Clicked(object sender, EventArgs e)
+    private async void RegisterButton_Clicked(object sender, EventArgs e)
     {
         try
         {
@@ -115,31 +116,67 @@ public partial class BtDataPage : ContentPage
                 };
 
                 await _char.StartUpdatesAsync();
-                ErrorLabel.Text = $"{GetTimeNow()}: Notify callback function registered successfully.";
+                ErrorLabel.Text = GetTimeNow() + ": Notify callback function registered successfully.";
             }
             else
             {
-                ErrorLabel.Text = $"{GetTimeNow()}: UART GATT service not found";
+                ErrorLabel.Text = GetTimeNow() + ": UART GATT service not found";
             }
         }
-        catch (Exception ex)
+        catch
         {
-            // Optionally log the exception for debugging
-            Console.WriteLine($"Exception: {ex.Message}");
-            ErrorLabel.Text = $"{GetTimeNow()}: Error initializing UART GATT service.";
+            ErrorLabel.Text = GetTimeNow() + ": Error initializing UART GATT service.";
         }
     }
 
 
     private async void SendButton_Clicked(object sender, EventArgs e)
     {
-
+        try
+        {
+            if (_char != null)
+            {
+                byte[] array = Encoding.UTF8.GetBytes(CommandTxt.Text);
+                await _char.WriteAsync(array);
+            }
+        }
+        catch
+        {
+            ErrorLabel.Text = GetTimeNow() + ": Error receiving Characteristic.";
+        }
     }
 
-    private async void RegisterButton_Clicked(object sender, EventArgs e)
+    private async void ReceiveButton_Clicked(object sender, EventArgs e)
     {
+        try
+        {
+            if (_char != null)
+            {
+                // Assuming _char.ReadAsync() returns a tuple (byte[] data, int resultCode)
+                var (receivedBytes, resultCode) = await _char.ReadAsync();
 
+                // Ensure the receivedBytes is not null
+                if (receivedBytes != null && receivedBytes.Length > 0)
+                {
+                    Output.Text += Encoding.UTF8.GetString(receivedBytes) + Environment.NewLine;
+                }
+                else
+                {
+                    Output.Text += "No data received." + Environment.NewLine;
+                }
+            }
+            else
+            {
+                ErrorLabel.Text = GetTimeNow() + ": No Characteristic selected.";
+            }
+        }
+        catch
+        {
+            ErrorLabel.Text = GetTimeNow() + ": Error receiving Characteristic. ";
+        }
     }
+
+
 
     private string GetTimeNow()
     {
