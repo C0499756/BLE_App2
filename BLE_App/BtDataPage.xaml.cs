@@ -89,38 +89,50 @@ public partial class BtDataPage : ContentPage
         {
             if (_char != null)
             {
-                _char.ValueUpdated += (o, args) =>
+                if (_char.CanUpdate)
                 {
-                    var receivedBytes = args.Characteristic.Value;
-                    Console.WriteLine("byte array: " + BitConverter.ToString(receivedBytes));
-
-                    string charStr = "";
-                    if (receivedBytes != null)
+                    _char.ValueUpdated += async (o, args) =>
                     {
-                        charStr = "Bytes: " + BitConverter.ToString(receivedBytes);
-                        charStr += " | UTF8: " + Encoding.UTF8.GetString(receivedBytes); //this line may be wrong and you may need to look it up
-                    }
+                        var receivedBytes = args.Characteristic.Value;
+                        Console.WriteLine("byte array: " + BitConverter.ToString(receivedBytes));
 
-                    if (receivedBytes.Length <= 4)
-                    {
-                        int charVal = 0;
-                        for (int i = 0; i < receivedBytes.Length; i++)
+                        string charStr = "";
+                        if (receivedBytes != null)
                         {
-                            charVal |= (receivedBytes[i] << (i * 8));
+                            charStr = "Bytes: " + BitConverter.ToString(receivedBytes);
+                            charStr += " | UTF8: " + Encoding.UTF8.GetString(receivedBytes);
+                            charStr += Environment.NewLine; // Add a newline after the received data
+
+                            // Update UI on the main thread
+                            await MainThread.InvokeOnMainThreadAsync(async () =>
+                            {
+                                Output.Text += charStr; // Update the Output text
+
+                                // Scroll to the bottom of the ScrollView
+                                await Task.Delay(100); // Optional delay for better scrolling
+                                await OutputScrollView.ScrollToAsync(0, Output.Height, true);
+                            });
                         }
-                        charStr += " | int: " + charVal.ToString();
-                    }
-                    charStr += Environment.NewLine;
 
-                    // Update UI on the main thread
-                    MainThread.BeginInvokeOnMainThread(() =>
-                    {
-                        Output.Text += charStr;
-                    });
-                };
+                        if (receivedBytes.Length <= 4)
+                        {
+                            int charVal = 0;
+                            for (int i = 0; i < receivedBytes.Length; i++)
+                            {
+                                charVal |= (receivedBytes[i] << (i * 8));
+                            }
+                            charStr += " | int: " + charVal.ToString();
+                        }
+                        charStr += Environment.NewLine;
+                    };
 
-                await _char.StartUpdatesAsync();
-                ErrorLabel.Text = GetTimeNow() + ": Notify callback function registered successfully.";
+                    await _char.StartUpdatesAsync();
+                    ErrorLabel.Text = GetTimeNow() + ": Notify callback function registered successfully.";
+                }
+                else
+                {
+                    ErrorLabel.Text = GetTimeNow() + ": Characteristic does not have a notify function.";
+                }
             }
             else
             {
@@ -132,6 +144,7 @@ public partial class BtDataPage : ContentPage
             ErrorLabel.Text = GetTimeNow() + ": Error initializing UART GATT service.";
         }
     }
+
 
 
     private async void SendButton_Clicked(object sender, EventArgs e)

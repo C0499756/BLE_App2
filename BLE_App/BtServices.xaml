@@ -8,7 +8,7 @@ Code modified by the Laplogic Team. For more details, see the video: https://www
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="BLE_App.BtServices"
              Title="Select BLE Service">
-    <ContentPage.Content>
+
         <VerticalStackLayout>
             <!--Display Selected BLE Device-->
         <Label Text="Selected BLE Device"
@@ -16,7 +16,8 @@ Code modified by the Laplogic Team. For more details, see the video: https://www
         <Label Text="Services"/>
             <!--The list below shows the services available on the selected BLE device-->
         <ListView x:Name="foundBleServs"
+                  VerticalOptions="FillAndExpand"
                   ItemTapped="foundBleServs_ItemTapped"/>
         </VerticalStackLayout>
-    </ContentPage.Content>
+
 </ContentPage>

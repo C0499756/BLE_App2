@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 
 namespace BLE_App
 {
+    //doesnt check to ensure that bluetooth is on when you enter the app or scan
     public partial class BtDevices : ContentPage
     {
         private IAdapter _bluetoothAdapter;
