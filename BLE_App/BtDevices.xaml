@@ -7,21 +7,16 @@
 
     <Grid>
         <StackLayout Orientation="Vertical">
-            <!--Refresh BLE devices in the list-->
-            <Button
-                x:Name="ScanBtn"
-                Margin="10"
-                Text="Scan" 
-                Clicked="ScanBtn_Clicked"/>
-            <!--ListView is the list that will be filled with the BLE devices detected-->
+            <!-- ListView is the list that will be filled with the BLE devices detected -->
             <ListView x:Name="foundBleDevicesListView"
-                  Footer=""
-                  ItemTapped="foundBleDevicesListView_ItemTapped"/>
+                      Footer=""
+                      ItemTapped="foundBleDevicesListView_ItemTapped"/>
         </StackLayout>
-        <!--circle seen when scan button is clicked-->
+        <!-- ActivityIndicator to show a loading indicator when scanning -->
         <ActivityIndicator x:Name="IsBusyIndicator"
-                       Scale="0.3"/>
+                           Scale="0.3"/>
     </Grid>
 
 </ContentPage>
+
 
