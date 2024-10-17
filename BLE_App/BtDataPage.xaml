@@ -11,50 +11,28 @@ Code modified by the Laplogic Team. For more details, see the video: https://www
 
     <VerticalStackLayout>
         <!--Display selected BLE device and BLE service-->
-        <Label 
-            Text="Selected Bluetooth Device"
-            x:Name="bleDevice"/>
-        <Label
-            Text="Selected BLE Service"
-            x:Name="bleService"/>
-        <!--Label to show details of selected Characteristic-->
-        <Label
-           Text="Characteristics"/>
-        <ListView
-            x:Name="foundBleChars"
-            ItemTapped="FoundBleChars_ItemTapped"/>
-        <!--Label to show details of selected Characteristic-->
-        <Label Text="No Characteristic selected"
-               x:Name="bleChar"/>
-        <ScrollView x:Name="OutputScrollView" HeightRequest="300">
-            <Label
-                x:Name="Output"
-                TextColor="DarkBlue"/>
+        <Label Text="Selected Bluetooth Device" x:Name="bleDevice"/>
+        <Label Text="Selected BLE Service" x:Name="bleService"/>
+
+        <HorizontalStackLayout>
+            <Button Text="RPM" x:Name="RPMButton" Clicked="OnButtonClicked" BackgroundColor="Gray"/>
+            <Button Text="Speed" x:Name="SpeedButton" Clicked="OnButtonClicked" BackgroundColor="Gray"/>
+            <Button Text="Coolant Temp" x:Name="CoolantTempButton" Clicked="OnButtonClicked" BackgroundColor="Gray"/>
+            <Button Text="Engine Temp" x:Name="EngineTempButton" Clicked="OnButtonClicked" BackgroundColor="Gray"/>
+        </HorizontalStackLayout>
+
+        <!-- Characteristic Elements -->
+        <Label Text="Characteristics"/>
+        <ListView x:Name="foundBleChars" ItemTapped="FoundBleChars_ItemTapped"/>
+        <Label Text="No Characteristic selected" x:Name="bleChar"/>
+        <ScrollView x:Name="OutputScrollView" HeightRequest="260">
+            <Label x:Name="Output" TextColor="DarkBlue"/>
         </ScrollView>
-        <!--Label to show error messages -->
-        <Label
-            Text=""
-            TextColor="DarkRed"
-            x:Name="ErrorLabel"/>
-        <!--Entry textfield to insert Strings to send to Characteristics-->
-        <Entry
-            x:Name="CommandTxt"
-            Placeholder="Type Here"
-            TextColor="Black"
-            TextChanged="CommandTxt_TextChanged"/>
-        <!--Buttons to send/receive/register to Characteristics-->
-        <StackLayout 
-            Margin="0,0,0,0">
-            <HorizontalStackLayout x:Name="ScanButton" >
-                <Button
-                    Text="Receive" 
-                    Clicked="ReceiveButton_Clicked"/>
-                <Button
-                    Text="Send" 
-                    Clicked="SendButton_Clicked"/>
-                <Button
-                    Text="Register" 
-                    Clicked="RegisterButton_Clicked"/>
+        <Label Text="" TextColor="DarkRed" x:Name="ErrorLabel"/>
+        <Entry x:Name="CommandTxt" Placeholder="Type Here" TextColor="Black" TextChanged="CommandTxt_TextChanged"/>
+        <StackLayout Margin="0,0,0,0">
+            <HorizontalStackLayout x:Name="ScanButton">
+                <Button Text="Register" Clicked="RegisterButton_Clicked"/>
             </HorizontalStackLayout>
         </StackLayout>
     </VerticalStackLayout>

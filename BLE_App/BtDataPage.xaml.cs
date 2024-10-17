@@ -11,6 +11,7 @@ using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Reflection;
 using System.Text;
+using System.Timers;
 
 namespace BLE_App;
 
@@ -20,6 +21,16 @@ public partial class BtDataPage : ContentPage
     private readonly IService _selectedService;
     private readonly List<ICharacteristic> _charList = new List<ICharacteristic>();
     private ICharacteristic _char;
+
+    private System.Timers.Timer _rpmTimer;
+    private System.Timers.Timer _speedTimer;
+    private System.Timers.Timer _coolantTempTimer;
+    private System.Timers.Timer _engineTempTimer;
+
+    private bool _isRPMButtonClicked;
+    private bool _isSpeedButtonClicked;
+    private bool _isCoolantTempButtonClicked;
+    private bool _isEngineTempButtonClicked;
 
     public BtDataPage(IDevice connectedDevice, IService selectedService)
     {
@@ -55,7 +66,7 @@ public partial class BtDataPage : ContentPage
             }
             else
             {
-
+                ErrorLabel.Text += GetTimeNow() + ": Error initializing UART GATT service.";
             }
 
         }
@@ -99,8 +110,7 @@ public partial class BtDataPage : ContentPage
                         string charStr = "";
                         if (receivedBytes != null)
                         {
-                            charStr = "Bytes: " + BitConverter.ToString(receivedBytes);
-                            charStr += " | UTF8: " + Encoding.UTF8.GetString(receivedBytes);
+                            charStr += Encoding.UTF8.GetString(receivedBytes);
                             charStr += Environment.NewLine; // Add a newline after the received data
 
                             // Update UI on the main thread
@@ -145,67 +155,12 @@ public partial class BtDataPage : ContentPage
         }
     }
 
-
-
-    private async void SendButton_Clicked(object sender, EventArgs e)
-    {
-        try
-        {
-            if (_char != null)
-            {
-                byte[] array = Encoding.UTF8.GetBytes(CommandTxt.Text);
-                await _char.WriteAsync(array);
-            }
-        }
-        catch
-        {
-            ErrorLabel.Text = GetTimeNow() + ": Error receiving Characteristic.";
-        }
-    }
-
     private async void ShowError(string message)
     {
         ErrorLabel.Text = message;
         await Task.Delay(60000); // Wait for 10 seconds
         ErrorLabel.Text = ""; // Clear the error message
     }
-
-
-    private async void ReceiveButton_Clicked(object sender, EventArgs e)
-    {
-        try
-        {
-            if (_char != null)
-            {
-                // Assuming _char.ReadAsync() returns a tuple (byte[] data, int resultCode)
-                var (receivedBytes, resultCode) = await _char.ReadAsync();
-
-                // Ensure the receivedBytes is not null
-                if (receivedBytes != null && receivedBytes.Length > 0)
-                {
-                    Output.Text += Encoding.UTF8.GetString(receivedBytes) + Environment.NewLine;
-
-                    // Scroll to the bottom of the ScrollView
-                    await Task.Delay(100); // Optional delay for better scrolling
-                    await OutputScrollView.ScrollToAsync(0, Output.Height, true);
-                }
-                else
-                {
-                    Output.Text += "No data received." + Environment.NewLine;
-                }
-            }
-            else
-            {
-                ShowError(GetTimeNow() + ": No Characteristic selected.");
-            }
-        }
-        catch
-        {
-            ShowError(GetTimeNow() + ": Error receiving Characteristic. ");
-        }
-    }
-
-
 
     private string GetTimeNow()
     {
@@ -225,4 +180,131 @@ public partial class BtDataPage : ContentPage
         }
 
     }
+
+    private void OnButtonClicked(object sender, EventArgs e)
+    {
+        var button = sender as Button;
+        if (button == null) return;
+
+        switch (button.Text)
+        {
+            case "RPM":
+                _isRPMButtonClicked = !_isRPMButtonClicked;
+                button.BackgroundColor = _isRPMButtonClicked ? Colors.Green : Colors.Gray;
+                HandleButtonState(_isRPMButtonClicked, "Request RPM");
+                break;
+            case "Speed":
+                _isSpeedButtonClicked = !_isSpeedButtonClicked;
+                button.BackgroundColor = _isSpeedButtonClicked ? Colors.Green : Colors.Gray;
+                HandleButtonState(_isSpeedButtonClicked, "Request Speed");
+                break;
+            case "Coolant Temp":
+                _isCoolantTempButtonClicked = !_isCoolantTempButtonClicked;
+                button.BackgroundColor = _isCoolantTempButtonClicked ? Colors.Green : Colors.Gray;
+                HandleButtonState(_isCoolantTempButtonClicked, "Request CoolantTemp");
+                break;
+            case "Engine Temp":
+                _isEngineTempButtonClicked = !_isEngineTempButtonClicked;
+                button.BackgroundColor = _isEngineTempButtonClicked ? Colors.Green : Colors.Gray;
+                HandleButtonState(_isEngineTempButtonClicked, "Request EngineTemp");
+                break;
+        }
+    }
+
+    private void HandleButtonState(bool isButtonClicked, string request)
+    {
+        switch (request)
+        {
+            case "Request RPM":
+                if (isButtonClicked)
+                {
+                    _rpmTimer = new System.Timers.Timer(1000);
+                    _rpmTimer.Elapsed += (sender, e) => SendBluetoothRequest(request);
+                    _rpmTimer.Start();
+                }
+                else
+                {
+                    _rpmTimer?.Stop();
+                    _rpmTimer?.Dispose();
+                    _rpmTimer = null;
+                }
+                break;
+            case "Request Speed":
+                if (isButtonClicked)
+                {
+                    _speedTimer = new System.Timers.Timer(1000);
+                    _speedTimer.Elapsed += (sender, e) => SendBluetoothRequest(request);
+                    _speedTimer.Start();
+                }
+                else
+                {
+                    _speedTimer?.Stop();
+                    _speedTimer?.Dispose();
+                    _speedTimer = null;
+                }
+                break;
+            case "Request CoolantTemp":
+                if (isButtonClicked)
+                {
+                    _coolantTempTimer = new System.Timers.Timer(1000);
+                    _coolantTempTimer.Elapsed += (sender, e) => SendBluetoothRequest(request);
+                    _coolantTempTimer.Start();
+                }
+                else
+                {
+                    _coolantTempTimer?.Stop();
+                    _coolantTempTimer?.Dispose();
+                    _coolantTempTimer = null;
+                }
+                break;
+
+            case "Request EngineTemp":
+                if (isButtonClicked)
+                {
+                    _engineTempTimer = new System.Timers.Timer(1000);
+                    _engineTempTimer.Elapsed += (sender, e) => SendBluetoothRequest(request);
+                    _engineTempTimer.Start();
+                }
+                else
+                {
+                    _engineTempTimer?.Stop();
+                    _engineTempTimer?.Dispose();
+                    _engineTempTimer = null;
+                }
+                break;
+        }
+    }
+
+    private async void SendBluetoothRequest(string request)
+    {
+        try
+        {
+            if (_char != null)
+            {
+                byte[] array = Encoding.UTF8.GetBytes(request);  // Convert the request string to bytes
+
+                // Write the request to the characteristic (similar to SendButton_Clicked logic)
+                await _char.WriteAsync(array);
+
+                // Update the UI on the main thread
+                await MainThread.InvokeOnMainThreadAsync(async () =>
+                {
+                    Output.Text += request + " sent via Bluetooth." + Environment.NewLine;
+
+                    // Scroll to the bottom of the ScrollView on the main thread
+                    await Task.Delay(100); // Optional delay for smooth scrolling
+                    await OutputScrollView.ScrollToAsync(0, Output.Height, true);
+                });
+            }
+            else
+            {
+                ShowError(GetTimeNow() + ": No BLE characteristic found.");
+            }
+        }
+        catch
+        {
+            ShowError(GetTimeNow() + ": Error sending Bluetooth request.");
+        }
+    }
+
 }
