@@ -276,7 +276,7 @@ public partial class BtDataPage : ContentPage
 
     private async void plusButton_Clicked(object sender, EventArgs e)
     {
-        // Create the content for the modal
+        // Create a StackLayout for the checkboxes
         var layout = new StackLayout();
 
         // Iterate through the options and create checkboxes for available ones
@@ -297,13 +297,20 @@ public partial class BtDataPage : ContentPage
         var submitButton = new Button { Text = "Submit" };
         layout.Children.Add(submitButton);
 
-        // Create a modal content page
+        // Create a ScrollView to hold the layout
+        var scrollView = new ScrollView
+        {
+            Content = layout,
+            VerticalOptions = LayoutOptions.FillAndExpand // Allow it to fill the available space
+        };
+
+        // Create a modal content page with the ScrollView
         var modalPage = new ContentPage
         {
             Content = new StackLayout
             {
                 Padding = new Thickness(10),
-                Children = { layout }
+                Children = { scrollView }
             }
         };
 
@@ -327,6 +334,7 @@ public partial class BtDataPage : ContentPage
         // Show the modal
         await Navigation.PushModalAsync(modalPage);
     }
+
 
 
 }
