@@ -194,19 +194,6 @@ public partial class BtDataPage : ContentPage
         return timestamp.Hour.ToString() + ":" + timestamp.Minute.ToString() + ":" + timestamp.Second.ToString();
     }
 
-    private void CommandTxt_TextChanged(object sender, TextChangedEventArgs e)
-    {
-        if (string.IsNullOrWhiteSpace(CommandTxt.Text))
-        {
-            CommandTxt.TextColor = Colors.Gray; //Color to indicate placeholder text
-        }
-        else
-        {
-            CommandTxt.TextColor = Colors.Black; // Change back to normal text color
-        }
-
-    }
-
     private void OnButtonClicked(object sender, EventArgs e)
     {
         var button = sender as Button;
@@ -331,6 +318,50 @@ public partial class BtDataPage : ContentPage
         {
             ShowError(GetTimeNow() + ": Error sending Bluetooth request.");
         }
+    }
+
+    private async void plusButton_Clicked(object sender, EventArgs e)
+    {
+        // Create the content for the modal
+        var layout = new StackLayout();
+
+        // Add a label and checkbox for "Monitor status since DTCs cleared"
+        var monitorStatusCheckbox = new CheckBox { IsChecked = false };
+        var monitorStatusLabel = new Label { Text = "Monitor status since DTCs cleared" };
+
+        layout.Children.Add(monitorStatusLabel);
+        layout.Children.Add(monitorStatusCheckbox);
+
+        // Add a submit button
+        var submitButton = new Button { Text = "Submit" };
+        layout.Children.Add(submitButton);
+
+        // Create a modal content page
+        var modalPage = new ContentPage
+        {
+            Content = new StackLayout
+            {
+                Padding = new Thickness(10),
+                Children = { layout }
+            }
+        };
+
+        // When the submit button is clicked, check if the checkbox is selected
+        submitButton.Clicked += (s, args) =>
+        {
+            if (monitorStatusCheckbox.IsChecked)
+            {
+                // Handle the request for "Monitor status since DTCs cleared"
+                Console.WriteLine("Monitor status since DTCs cleared selected");
+                // You can add your request handling logic here
+            }
+
+            // Close the modal
+            Navigation.PopModalAsync();
+        };
+
+        // Show the modal
+        await Navigation.PushModalAsync(modalPage);
     }
 
 }
