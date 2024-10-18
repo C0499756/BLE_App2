@@ -83,6 +83,9 @@ public partial class BtDataPage : ContentPage
                         "Read: " + _char.CanRead + "\n" +
                         "Write: " + _char.CanWrite + "\n" +
                         "Update: " + _char.CanUpdate;
+
+                    //Automaticlaly Call RegisterButton_Clicked after selecting the character
+                    RegisterButton_Clicked(null, null);
                 }
             }
             else
