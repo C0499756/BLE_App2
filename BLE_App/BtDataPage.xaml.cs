@@ -86,6 +86,8 @@ public partial class BtDataPage : ContentPage
 
                     //Automaticlaly Call RegisterButton_Clicked after selecting the character
                     RegisterButton_Clicked(null, null);
+                    await Task.Delay(250); // Wait for 250ms
+                    SendBluetoothRequest("PIDs");
                 }
             }
             else
