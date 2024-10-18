@@ -72,18 +72,12 @@ public partial class BtDataPage : ContentPage
                     }
                 }
 
-                foundBleChars.ItemsSource = charListStr;
-
                 // Automatically select the "Unknown Characteristic" if found
                 if (unknownCharacteristic != null)
                 {
                     _char = unknownCharacteristic;
-                    bleChar.Text = _char.Name + "\n" +
-                        "UUID: " + _char.Uuid.ToString() + "\n" +
-                        "Read: " + _char.CanRead + "\n" +
-                        "Write: " + _char.CanWrite + "\n" +
-                        "Update: " + _char.CanUpdate;
-
+                    // Display the characteristic name and UUID
+                    bleChar.Text = $"Selected BLE characteristic: {_char.Name}";
                     //Automaticlaly Call RegisterButton_Clicked after selecting the character
                     RegisterButton_Clicked(null, null);
                     await Task.Delay(250); // Wait for 250ms
@@ -101,22 +95,11 @@ public partial class BtDataPage : ContentPage
         }
     }
 
-
     private async void FoundBleChars_ItemTapped(object sender, ItemTappedEventArgs e)
     {
         if (_selectedService != null)
         {
             _char = _charList[e.ItemIndex];
-            bleChar.Text = _char.Name + "\n" +
-                "UUID: " + _char.Uuid.ToString() + "\n" +
-                "Read: " + _char.CanRead + "\n" +
-                "Write: " + _char.CanRead + "\n" +
-                "Update: " + _char.CanUpdate;
-            var charDescriptors = await _char.GetDescriptorsAsync();
-
-            bleChar.Text += "\nDescriptors (" + charDescriptors.Count + "): ";
-            for (int i = 0; i < charDescriptors.Count; i++)
-                bleChar.Text += charDescriptors[i].Name + ", ";
         }
     }
 

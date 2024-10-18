@@ -11,13 +11,12 @@ Code modified by the Laplogic Team. For more details, see the video: https://www
 
     <VerticalStackLayout>
         <!--Display selected BLE device and BLE service-->
-        <Label Text="Selected Bluetooth Device" x:Name="bleDevice"/>
-        <Label Text="Selected BLE Service" x:Name="bleService"/>
+        <Label x:Name="bleDevice" TextColor="DarkBlue"/>
+        <Label x:Name="bleService" TextColor="DarkBlue"/>
+        <Label Text="Selected BLE Characteristic" x:Name="bleChar" TextColor="DarkBlue"/>
+        <!-- Underline for the characteristic label -->
+        <BoxView HeightRequest="3" BackgroundColor="Black" HorizontalOptions="FillAndExpand" Margin="0,10,0,10"/>
 
-        <!-- Characteristic Elements -->
-        <Label Text="Characteristics"/>
-        <ListView x:Name="foundBleChars" ItemTapped="FoundBleChars_ItemTapped"/>
-        <Label Text="No Characteristic selected" x:Name="bleChar"/>
         <ScrollView x:Name="OutputScrollView" HeightRequest="260">
             <Label x:Name="Output" TextColor="DarkBlue"/>
         </ScrollView>
