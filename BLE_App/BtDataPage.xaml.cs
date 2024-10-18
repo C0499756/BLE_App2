@@ -57,24 +57,45 @@ public partial class BtDataPage : ContentPage
 
                 _charList.Clear();
                 var charListStr = new List<String>();
+                ICharacteristic unknownCharacteristic = null;
+
                 for (int i = 0; i < charListReadOnly.Count; i++)
                 {
                     _charList.Add(charListReadOnly[i]);
                     charListStr.Add(charListReadOnly[i].Name);
+
+                    // Check for the "Unknown Characteristic"
+                    if (charListReadOnly[i].Name == "Unknown characteristic")
+                    {
+                        unknownCharacteristic = charListReadOnly[i];
+                        break; // Exit loop once found
+                    }
                 }
+
                 foundBleChars.ItemsSource = charListStr;
+
+                // Automatically select the "Unknown Characteristic" if found
+                if (unknownCharacteristic != null)
+                {
+                    _char = unknownCharacteristic;
+                    bleChar.Text = _char.Name + "\n" +
+                        "UUID: " + _char.Uuid.ToString() + "\n" +
+                        "Read: " + _char.CanRead + "\n" +
+                        "Write: " + _char.CanWrite + "\n" +
+                        "Update: " + _char.CanUpdate;
+                }
             }
             else
             {
                 ErrorLabel.Text += GetTimeNow() + ": Error initializing UART GATT service.";
             }
-
         }
         catch
         {
-            ErrorLabel.Text += GetTimeNow() + ": Error intializing UART GATT service.";
+            ErrorLabel.Text += GetTimeNow() + ": Error initializing UART GATT service.";
         }
     }
+
 
     private async void FoundBleChars_ItemTapped(object sender, ItemTappedEventArgs e)
     {

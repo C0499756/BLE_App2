@@ -27,29 +27,46 @@ public partial class BtServices : ContentPage
 
 	}
 
-	//called straight after the page is loaded
-	protected async override void OnAppearing()
-	{
-		base.OnAppearing();
+    //called straight after the page is loaded
+    protected async override void OnAppearing()
+    {
+        base.OnAppearing();
 
-		try
-		{
-			var servicesListReadOnly = await _connectedDevice.GetServicesAsync();
+        try
+        {
+            var servicesListReadOnly = await _connectedDevice.GetServicesAsync();
 
-			_servicesList.Clear();
-			var _servicesListStr = new List<String>();
-			for(int i = 0; i < servicesListReadOnly.Count; i++)
-			{
-				_servicesList.Add(servicesListReadOnly[i]);
-				_servicesListStr.Add(servicesListReadOnly[i].Name + ", UUID: " + servicesListReadOnly[i].Id.ToString());
-			}
-			foundBleServs.ItemsSource = _servicesListStr;
-		}
-		catch
-		{
-			await DisplayAlert("Error initializing", $"Error initializing UART GATT service.", "OK");
-		}
-	}
+            _servicesList.Clear();
+            var _servicesListStr = new List<String>();
+            IService unknownService = null;
+
+            for (int i = 0; i < servicesListReadOnly.Count; i++)
+            {
+                _servicesList.Add(servicesListReadOnly[i]);
+                _servicesListStr.Add(servicesListReadOnly[i].Name + ", UUID: " + servicesListReadOnly[i].Id.ToString());
+
+                // Check for the "Unknown Service"
+                if (servicesListReadOnly[i].Name == "Unknown Service")
+                {
+                    unknownService = servicesListReadOnly[i];
+                    break; // Exit loop once found
+                }
+            }
+
+            foundBleServs.ItemsSource = _servicesListStr;
+
+            // Automatically navigate to the BtDataPage if the service was found
+            if (unknownService != null)
+            {
+                await Navigation.PushAsync(new BtDataPage(_connectedDevice, unknownService));
+            }
+        }
+        catch
+        {
+            await DisplayAlert("Error initializing", $"Error initializing UART GATT service.", "OK");
+        }
+    }
+
     private async void foundBleServs_ItemTapped(object sender, ItemTappedEventArgs e)
     {
 		var selectedService = _servicesList[e.ItemIndex];
