@@ -21,16 +21,7 @@ public partial class BtDataPage : ContentPage
     private readonly IService _selectedService;
     private readonly List<ICharacteristic> _charList = new List<ICharacteristic>();
     private ICharacteristic _char;
-
-    private System.Timers.Timer _rpmTimer;
-    private System.Timers.Timer _speedTimer;
-    private System.Timers.Timer _coolantTempTimer;
-    private System.Timers.Timer _engineTempTimer;
-
-    private bool _isRPMButtonClicked;
-    private bool _isSpeedButtonClicked;
-    private bool _isCoolantTempButtonClicked;
-    private bool _isEngineTempButtonClicked;
+    string charStr;
 
     public BtDataPage(IDevice connectedDevice, IService selectedService)
     {
@@ -113,36 +104,52 @@ public partial class BtDataPage : ContentPage
                 {
                     _char.ValueUpdated += async (o, args) =>
                     {
-                        var receivedBytes = args.Characteristic.Value;
+                        byte[] receivedBytes = args.Characteristic.Value;
                         Console.WriteLine("byte array: " + BitConverter.ToString(receivedBytes));
 
-                        string charStr = "";
-                        if (receivedBytes != null)
+                        // Check if the length of received bytes is 4
+                        if (receivedBytes.Length == 4)
                         {
-                            charStr += Encoding.UTF8.GetString(receivedBytes);
-                            charStr += Environment.NewLine; // Add a newline after the received data
+                            // Convert byte array to a binary string
+                            string binaryString = string.Join("", receivedBytes.Select(b => Convert.ToString(b, 2).PadLeft(8, '0')));
+                            Console.WriteLine("binary string: " + binaryString); // Output for debugging
 
-                            // Update UI on the main thread
+                            // Check if the binary string is valid (32 bits)
+                            if (Is32BitBinary(binaryString))
+                            {
+                                // Update Output on the main thread
+                                await MainThread.InvokeOnMainThreadAsync(() =>
+                                {
+                                    Output.Text += "Received valid 32-bit binary: " + binaryString + "\n"; // Print the binary string
+                                });
+
+                                // Process the data if it's valid
+                                ProcessPIDs(binaryString);
+                            }
+                            else
+                            {
+                                // Update Output on the main thread
+                                await MainThread.InvokeOnMainThreadAsync(() =>
+                                {
+                                    Output.Text += "Invalid 32-bit binary data: " + binaryString + "\n"; // Print invalid message
+                                });
+                            }
+
+                            // Scroll to the bottom of the ScrollView
                             await MainThread.InvokeOnMainThreadAsync(async () =>
                             {
-                                Output.Text += charStr; // Update the Output text
-
-                                // Scroll to the bottom of the ScrollView
                                 await Task.Delay(100); // Optional delay for better scrolling
                                 await OutputScrollView.ScrollToAsync(0, Output.Height, true);
                             });
                         }
-
-                        if (receivedBytes.Length <= 4)
+                        else
                         {
-                            int charVal = 0;
-                            for (int i = 0; i < receivedBytes.Length; i++)
+                            // Update Output on the main thread
+                            await MainThread.InvokeOnMainThreadAsync(() =>
                             {
-                                charVal |= (receivedBytes[i] << (i * 8));
-                            }
-                            charStr += " | int: " + charVal.ToString();
+                                Output.Text += "Received invalid length: " + receivedBytes.Length + "\n"; // Handle the invalid length case
+                            });
                         }
-                        charStr += Environment.NewLine;
                     };
 
                     await _char.StartUpdatesAsync();
@@ -158,16 +165,22 @@ public partial class BtDataPage : ContentPage
                 ErrorLabel.Text = GetTimeNow() + ": UART GATT service not found";
             }
         }
-        catch
+        catch (Exception ex)
         {
-            ErrorLabel.Text = GetTimeNow() + ": Error initializing UART GATT service.";
+            ErrorLabel.Text = GetTimeNow() + ": Error initializing UART GATT service. " + ex.Message;
         }
+    }
+
+    private bool Is32BitBinary(string data)
+    {
+        // Check if the data is exactly 32 characters long and consists of '0's and '1's
+        return data.Length == 32 && data.All(c => c == '0' || c == '1');
     }
 
     private async void ShowError(string message)
     {
         ErrorLabel.Text = message;
-        await Task.Delay(60000); // Wait for 10 seconds
+        await Task.Delay(60000); // Wait for 60 seconds
         ErrorLabel.Text = ""; // Clear the error message
     }
 
@@ -175,100 +188,6 @@ public partial class BtDataPage : ContentPage
     {
         var timestamp = DateTime.Now;
         return timestamp.Hour.ToString() + ":" + timestamp.Minute.ToString() + ":" + timestamp.Second.ToString();
-    }
-
-    private void OnButtonClicked(object sender, EventArgs e)
-    {
-        var button = sender as Button;
-        if (button == null) return;
-
-        switch (button.Text)
-        {
-            case "RPM":
-                _isRPMButtonClicked = !_isRPMButtonClicked;
-                button.BackgroundColor = _isRPMButtonClicked ? Colors.Green : Colors.Gray;
-                HandleButtonState(_isRPMButtonClicked, "Request RPM");
-                break;
-            case "Speed":
-                _isSpeedButtonClicked = !_isSpeedButtonClicked;
-                button.BackgroundColor = _isSpeedButtonClicked ? Colors.Green : Colors.Gray;
-                HandleButtonState(_isSpeedButtonClicked, "Request Speed");
-                break;
-            case "Coolant Temp":
-                _isCoolantTempButtonClicked = !_isCoolantTempButtonClicked;
-                button.BackgroundColor = _isCoolantTempButtonClicked ? Colors.Green : Colors.Gray;
-                HandleButtonState(_isCoolantTempButtonClicked, "Request CoolantTemp");
-                break;
-            case "Engine Temp":
-                _isEngineTempButtonClicked = !_isEngineTempButtonClicked;
-                button.BackgroundColor = _isEngineTempButtonClicked ? Colors.Green : Colors.Gray;
-                HandleButtonState(_isEngineTempButtonClicked, "Request EngineTemp");
-                break;
-        }
-    }
-
-    private void HandleButtonState(bool isButtonClicked, string request)
-    {
-        switch (request)
-        {
-            case "Request RPM":
-                if (isButtonClicked)
-                {
-                    _rpmTimer = new System.Timers.Timer(1000);
-                    _rpmTimer.Elapsed += (sender, e) => SendBluetoothRequest(request);
-                    _rpmTimer.Start();
-                }
-                else
-                {
-                    _rpmTimer?.Stop();
-                    _rpmTimer?.Dispose();
-                    _rpmTimer = null;
-                }
-                break;
-            case "Request Speed":
-                if (isButtonClicked)
-                {
-                    _speedTimer = new System.Timers.Timer(1000);
-                    _speedTimer.Elapsed += (sender, e) => SendBluetoothRequest(request);
-                    _speedTimer.Start();
-                }
-                else
-                {
-                    _speedTimer?.Stop();
-                    _speedTimer?.Dispose();
-                    _speedTimer = null;
-                }
-                break;
-            case "Request CoolantTemp":
-                if (isButtonClicked)
-                {
-                    _coolantTempTimer = new System.Timers.Timer(1000);
-                    _coolantTempTimer.Elapsed += (sender, e) => SendBluetoothRequest(request);
-                    _coolantTempTimer.Start();
-                }
-                else
-                {
-                    _coolantTempTimer?.Stop();
-                    _coolantTempTimer?.Dispose();
-                    _coolantTempTimer = null;
-                }
-                break;
-
-            case "Request EngineTemp":
-                if (isButtonClicked)
-                {
-                    _engineTempTimer = new System.Timers.Timer(1000);
-                    _engineTempTimer.Elapsed += (sender, e) => SendBluetoothRequest(request);
-                    _engineTempTimer.Start();
-                }
-                else
-                {
-                    _engineTempTimer?.Stop();
-                    _engineTempTimer?.Dispose();
-                    _engineTempTimer = null;
-                }
-                break;
-        }
     }
 
     private async void SendBluetoothRequest(string request)
@@ -301,6 +220,11 @@ public partial class BtDataPage : ContentPage
         {
             ShowError(GetTimeNow() + ": Error sending Bluetooth request.");
         }
+    }
+
+    private void ProcessPIDs(string data)
+    {
+
     }
 
     private async void plusButton_Clicked(object sender, EventArgs e)
