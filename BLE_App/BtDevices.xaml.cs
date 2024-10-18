@@ -2,9 +2,7 @@
 using Plugin.BLE.Abstractions;
 using Plugin.BLE.Abstractions.Contracts;
 using System;
-using System.Collections;
 using System.Collections.ObjectModel;
-using System.ComponentModel;
 using System.Threading.Tasks;
 
 namespace BLE_App
@@ -13,6 +11,7 @@ namespace BLE_App
     {
         private IAdapter _bluetoothAdapter;
         private ObservableCollection<IDevice> _gattDevices = new ObservableCollection<IDevice>();
+        private IDevice _connectedDevice;
 
         public BtDevices()
         {
@@ -20,10 +19,10 @@ namespace BLE_App
 
             _bluetoothAdapter = CrossBluetoothLE.Current.Adapter;
 
-            // Bind the ListView to the ObservableCollection
+            // Bind the device ListView to the ObservableCollection
             foundBleDevicesListView.ItemsSource = _gattDevices;
 
-            // Automatically start scanning when the page is loaded
+            // Start scanning when the page is loaded
             StartContinuousScan();
         }
 
@@ -59,7 +58,6 @@ namespace BLE_App
                     await _bluetoothAdapter.StartScanningForDevicesAsync();
                 }
 
-                // Wait for a while before rescanning
                 await Task.Delay(5000); // Adjust the delay based on your needs
             }
         }
@@ -69,7 +67,6 @@ namespace BLE_App
         {
             if (e.Device != null && !string.IsNullOrEmpty(e.Device.Name) && e.Device.Name.StartsWith("WATS"))
             {
-                // Add the device if it's not already in the list
                 if (!_gattDevices.Contains(e.Device))
                 {
                     _gattDevices.Add(e.Device);
@@ -77,68 +74,74 @@ namespace BLE_App
             }
         }
 
-        // Dynamically remove devices that are no longer available
-        private async void RemoveUnavailableDevices()
-        {
-            while (true)
-            {
-                bool listUpdated = false;  // Track if any updates are made to the list
-
-                // Iterate through a copy of the list to safely remove disconnected devices
-                foreach (var device in _gattDevices.ToList())
-                {
-                    if (device.State == DeviceState.Disconnected)
-                    {
-                        _gattDevices.Remove(device);  // Remove disconnected devices
-                        listUpdated = true;  // Flag that an update was made
-                    }
-                }
-
-                if (listUpdated)
-                {
-                    // Update the ListView's ItemsSource only if there are changes
-                    await MainThread.InvokeOnMainThreadAsync(() =>
-                    {
-                        foundBleDevicesListView.ItemsSource = null;  // Clear the list
-                        foundBleDevicesListView.ItemsSource = _gattDevices.ToArray();  // Set updated list
-                    });
-                }
-
-                await Task.Delay(5000); // Check for unavailable devices every 5 seconds
-            }
-        }
-
-
-
-        // When an item is selected from the list
+        // When an item is selected from the devices list
         private async void foundBleDevicesListView_ItemTapped(object sender, ItemTappedEventArgs e)
         {
-            IDevice selectedItem = e.Item as IDevice;
+            _connectedDevice = e.Item as IDevice;
 
-            if (selectedItem.State == DeviceState.Connected)
+            if (_connectedDevice.State == DeviceState.Connected)
             {
-                await Navigation.PushAsync(new BtServices(selectedItem));
+                await SelectUnknownService(_connectedDevice);
             }
             else
             {
                 try
                 {
                     var connectParameters = new ConnectParameters(false, true);
-                    await _bluetoothAdapter.ConnectToDeviceAsync(selectedItem, connectParameters);
-                    await Navigation.PushAsync(new BtServices(selectedItem));
+                    await _bluetoothAdapter.ConnectToDeviceAsync(_connectedDevice, connectParameters);
+                    await SelectUnknownService(_connectedDevice);
                 }
                 catch
                 {
-                    await DisplayAlert("Error connecting", $"Error connecting to BLE device: {selectedItem.Name ?? "Unknown device"}", "OK");
+                    await DisplayAlert("Error connecting", $"Error connecting to BLE device: {_connectedDevice.Name ?? "Unknown device"}", "OK");
                 }
             }
+        }
+
+        // Select and navigate to the Unknown Service
+        private async Task SelectUnknownService(IDevice connectedDevice)
+        {
+            try
+            {
+                var servicesListReadOnly = await connectedDevice.GetServicesAsync();
+
+                IService unknownService = null;
+
+                foreach (var service in servicesListReadOnly)
+                {
+                    // Automatically select "Unknown Service" if it exists
+                    if (service.Name == "Unknown Service")
+                    {
+                        unknownService = service;
+                        break;
+                    }
+                }
+
+                if (unknownService != null)
+                {
+                    await NavigateToDataPage(unknownService);
+                }
+                else
+                {
+                    await DisplayAlert("Error", "Unknown Service not found.", "OK");
+                }
+            }
+            catch
+            {
+                await DisplayAlert("Error", "Error retrieving services.", "OK");
+            }
+        }
+
+        // Navigate to the data page for the Unknown Service
+        private async Task NavigateToDataPage(IService service)
+        {
+            await Navigation.PushAsync(new BtDataPage(_connectedDevice, service));
         }
 
         protected override void OnDisappearing()
         {
             base.OnDisappearing();
 
-            // Stop scanning when the page is closed to save resources
             if (_bluetoothAdapter.IsScanning)
             {
                 _bluetoothAdapter.StopScanningForDevicesAsync();
@@ -146,3 +149,4 @@ namespace BLE_App
         }
     }
 }
+

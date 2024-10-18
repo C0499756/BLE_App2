@@ -69,9 +69,6 @@
 	  <Compile Update="BtDevices.xaml.cs">
 	    <DependentUpon>BtDevices.xaml</DependentUpon>
 	  </Compile>
-	  <Compile Update="BtServices.xaml.cs">
-	    <DependentUpon>BtServices.xaml</DependentUpon>
-	  </Compile>
 	  <Compile Update="PositionData.xaml.cs">
 	    <DependentUpon>PositionData.xaml</DependentUpon>
 	  </Compile>
@@ -85,9 +82,6 @@
 	    <Generator>MSBuild:Compile</Generator>
 	  </MauiXaml>
 	  <MauiXaml Update="PositionData.xaml">
-	    <Generator>MSBuild:Compile</Generator>
-	  </MauiXaml>
-	  <MauiXaml Update="BtServices.xaml">
 	    <Generator>MSBuild:Compile</Generator>
 	  </MauiXaml>
 	</ItemGroup>
