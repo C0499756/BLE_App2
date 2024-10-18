@@ -224,39 +224,40 @@ public partial class BtDataPage : ContentPage
 
     private Dictionary<string, int> optionMapping = new Dictionary<string, int>
 {
-    { "PIDs supported [21 - 40]", 0 },           // Bit 0
-    { "Run time since engine start", 1 },         // Bit 1
-    { "Auxiliary input status", 2 },               // Bit 2
-    { "Oxygen sensors present (4 banks)", 3 },     // Bit 3
-    { "OBD standards the vehicle conforms to", 4 }, // Bit 4
-    { "Oxygen sensor 8 (voltage)", 5 },            // Bit 5
-    { "Oxygen sensor 7 (voltage)", 6 },            // Bit 6
-    { "Oxygen sensor 6 (voltage)", 7 },            // Bit 7
-    { "Oxygen sensor 5 (voltage)", 8 },            // Bit 8
-    { "Oxygen sensor 4 (voltage)", 9 },            // Bit 9
-    { "Oxygen sensor 3 (voltage)", 10 },           // Bit 10
-    { "Oxygen sensor 2 (voltage)", 11 },           // Bit 11
-    { "Oxygen sensor 1 (voltage)", 12 },           // Bit 12
-    { "Oxygen sensors present (2 banks)", 13 },     // Bit 13
-    { "Commanded secondary air status", 14 },      // Bit 14
-    { "Throttle position", 15 },                    // Bit 15
-    { "Mass air flow sensor air flow rate", 16 },   // Bit 16
-    { "Intake air temperature", 17 },               // Bit 17
-    { "Timing advance", 18 },                       // Bit 18
-    { "Vehicle speed", 19 },                        // Bit 19
-    { "Engine speed", 20 },                         // Bit 20
-    { "Intake manifold absolute pressure", 21 },    // Bit 21
-    { "Fuel pressure (gauge pressure)", 22 },      // Bit 22
-    { "Long term fuel trim (bank 2)", 23 },        // Bit 23
-    { "Short term fuel trim (bank 2)", 24 },       // Bit 24
-    { "Long term fuel trim (bank 1)", 25 },        // Bit 25
-    { "Short term fuel trim (bank 1)", 26 },       // Bit 26
-    { "Engine coolant temperature", 27 },           // Bit 27
-    { "Calculated engine load", 28 },              // Bit 28
-    { "Fuel system status", 29 },                   // Bit 29
-    { "Freeze DTC", 30 },                          // Bit 30
-    { "Monitor status since DTCs cleared", 31 }     // Bit 31
+    { "Monitor status since DTCs cleared", 0 },  // Bit 0
+    { "Freeze DTC", 1 },                        // Bit 1
+    { "Fuel system status", 2 },                // Bit 2
+    { "Calculated engine load", 3 },            // Bit 3
+    { "Engine coolant temperature", 4 },         // Bit 4
+    { "Short term fuel trim (bank 1)", 5 },     // Bit 5
+    { "Long term fuel trim (bank 1)", 6 },      // Bit 6
+    { "Short term fuel trim (bank 2)", 7 },     // Bit 7
+    { "Long term fuel trim (bank 2)", 8 },      // Bit 8
+    { "Fuel pressure (gauge pressure)", 9 },    // Bit 9
+    { "Intake manifold absolute pressure", 10 }, // Bit 10
+    { "Engine speed", 11 },                      // Bit 11
+    { "Vehicle speed", 12 },                     // Bit 12
+    { "Timing advance", 13 },                    // Bit 13
+    { "Intake air temperature", 14 },            // Bit 14
+    { "Mass air flow sensor air flow rate", 15 },// Bit 15
+    { "Throttle position", 16 },                 // Bit 16
+    { "Commanded secondary air status", 17 },    // Bit 17
+    { "Oxygen sensors present (2 banks)", 18 },  // Bit 18
+    { "Oxygen sensor 1 (voltage)", 19 },         // Bit 19
+    { "Oxygen sensor 2 (voltage)", 20 },         // Bit 20
+    { "Oxygen sensor 3 (voltage)", 21 },         // Bit 21
+    { "Oxygen sensor 4 (voltage)", 22 },         // Bit 22
+    { "Oxygen sensor 5 (voltage)", 23 },         // Bit 23
+    { "Oxygen sensor 6 (voltage)", 24 },         // Bit 24
+    { "Oxygen sensor 7 (voltage)", 25 },         // Bit 25
+    { "Oxygen sensor 8 (voltage)", 26 },         // Bit 26
+    { "OBD standards the vehicle conforms to", 27 }, // Bit 27
+    { "Oxygen sensors present (4 banks)", 28 },   // Bit 28
+    { "Auxiliary input status", 29 },             // Bit 29
+    { "Run time since engine start", 30 },        // Bit 30
+    { "PIDs supported [21 - 40]", 31 }            // Bit 31
 };
+
 
     private void ProcessPIDs(string binaryString)
     {
@@ -266,18 +267,46 @@ public partial class BtDataPage : ContentPage
             return;
         }
 
-        // Store the available options based on the binary string
+        // Invert the binaryString
+        string invertedBinaryString = new string(binaryString.Reverse().ToArray());
+
+        // Store the available options based on the inverted binary string
         foreach (var option in optionMapping)
         {
-            var isAvailable = (binaryString[binaryString.Length - 1 - option.Value] == '1') ? "yes" : "no";
+            var isAvailable = (invertedBinaryString[invertedBinaryString.Length - 1 - option.Value] == '1') ? "yes" : "no";
             Console.WriteLine($"{option.Key}: {isAvailable}");
         }
     }
 
     private async void plusButton_Clicked(object sender, EventArgs e)
     {
-        // Create a StackLayout for the checkboxes
-        var layout = new StackLayout();
+        // Create the main layout
+        var layout = new StackLayout
+        {
+            Padding = new Thickness(10),
+        };
+
+        // Create the "X" button for closing the modal
+        var closeButton = new Button
+        {
+            Text = "X",
+            BackgroundColor = Colors.DarkBlue, // Optional: make it transparent
+            TextColor = Colors.White, // Change this to your preferred color
+            VerticalOptions = LayoutOptions.Start // Place it at the top
+        };
+
+        // Event for the close button
+        closeButton.Clicked += async (s, args) =>
+        {
+            // Close the modal when clicked
+            await Navigation.PopModalAsync();
+        };
+
+        // Add the close button to the layout
+        layout.Children.Add(closeButton);
+
+        // Create a StackLayout for the scrollable options
+        var scrollableLayout = new StackLayout();
 
         // Iterate through the options and create checkboxes for available ones
         foreach (var option in optionMapping)
@@ -288,53 +317,30 @@ public partial class BtDataPage : ContentPage
                 var checkBox = new CheckBox { IsChecked = false };
                 var label = new Label { Text = option.Key };
 
-                layout.Children.Add(label);
-                layout.Children.Add(checkBox);
+                // Add each label and checkbox to the scrollable layout
+                scrollableLayout.Children.Add(label);
+                scrollableLayout.Children.Add(checkBox);
             }
         }
 
-        // Add a submit button
-        var submitButton = new Button { Text = "Submit" };
-        layout.Children.Add(submitButton);
-
-        // Create a ScrollView to hold the layout
+        // Create a ScrollView and set the content to the scrollable layout
         var scrollView = new ScrollView
         {
-            Content = layout,
-            VerticalOptions = LayoutOptions.FillAndExpand // Allow it to fill the available space
+            Content = scrollableLayout,
+            VerticalOptions = LayoutOptions.FillAndExpand // Allow it to fill the available vertical space
         };
 
-        // Create a modal content page with the ScrollView
+        // Add the ScrollView to the main layout
+        layout.Children.Add(scrollView);
+
+        // Create a modal content page
         var modalPage = new ContentPage
         {
-            Content = new StackLayout
-            {
-                Padding = new Thickness(10),
-                Children = { scrollView }
-            }
-        };
-
-        // When the submit button is clicked, check if any checkboxes are selected
-        submitButton.Clicked += (s, args) =>
-        {
-            foreach (var child in layout.Children)
-            {
-                if (child is CheckBox cb && cb.IsChecked)
-                {
-                    var optionIndex = layout.Children.IndexOf(cb) / 2; // Every label is followed by its checkbox
-                    Console.WriteLine($"{optionMapping.ElementAt(optionIndex).Key} selected");
-                    // You can add your request handling logic here
-                }
-            }
-
-            // Close the modal
-            Navigation.PopModalAsync();
+            Content = layout
         };
 
         // Show the modal
         await Navigation.PushModalAsync(modalPage);
     }
-
-
 
 }
