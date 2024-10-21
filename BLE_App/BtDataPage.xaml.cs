@@ -449,6 +449,7 @@ public partial class BtDataPage : ContentPage
         // For example, send the hex value to the connected Bluetooth device
         Console.WriteLine($"Sending data: {hexValue}");
         
+        //
         //Send
             //wait 
             //stop
