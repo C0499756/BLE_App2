@@ -105,52 +105,36 @@ public partial class BtDataPage : ContentPage
                     _char.ValueUpdated += async (o, args) =>
                     {
                         byte[] receivedBytes = args.Characteristic.Value;
-                        Console.WriteLine("byte array: " + BitConverter.ToString(receivedBytes));
+                        string receivedString = BitConverter.ToString(receivedBytes); // Convert the bytes to a string
 
-                        // Check if the length of received bytes is 4
+                        // Check if the task is waiting for a response
+                        if (responseTaskCompletionSource != null && !responseTaskCompletionSource.Task.IsCompleted)
+                        {
+                            // Complete the task with the received response
+                            responseTaskCompletionSource.TrySetResult(receivedString);
+                        }
+
+                        // Handle additional response processing if needed (like binary string conversion)
                         if (receivedBytes.Length == 4)
                         {
-                            // Convert byte array to a binary string
                             binaryString = string.Join("", receivedBytes.Select(b => Convert.ToString(b, 2).PadLeft(8, '0')));
-                            Console.WriteLine("binary string: " + binaryString); // Output for debugging
-
-                            // Check if the binary string is valid (32 bits)
                             if (Is32BitBinary(binaryString))
                             {
-                                // Update Output on the main thread
                                 await MainThread.InvokeOnMainThreadAsync(() =>
                                 {
-                                    Output.Text += "Received valid 32-bit binary: " + binaryString + "\n"; // Print the binary string
+                                    Output.Text += "Received valid 32-bit binary: " + binaryString + "\n";
                                 });
-
-                                // Process the data if it's valid
                                 ProcessPIDs(binaryString);
                             }
                             else
                             {
-                                // Update Output on the main thread
                                 await MainThread.InvokeOnMainThreadAsync(() =>
                                 {
-                                    Output.Text += "Invalid 32-bit binary data: " + binaryString + "\n"; // Print invalid message
+                                    Output.Text += "Invalid 32-bit binary data: " + binaryString + "\n";
                                 });
                             }
-
-                            // Scroll to the bottom of the ScrollView
-                            await MainThread.InvokeOnMainThreadAsync(async () =>
-                            {
-                                await Task.Delay(100); // Optional delay for better scrolling
-                                await OutputScrollView.ScrollToAsync(0, Output.Height, true);
-                            });
                         }
-                        else
-                        {
-                            // Update Output on the main thread
-                            await MainThread.InvokeOnMainThreadAsync(() =>
-                            {
-                                Output.Text += "Received invalid length: " + receivedBytes.Length + "\n"; // Handle the invalid length case
-                            });
-                        }
-                    };
+                    }
 
                     await _char.StartUpdatesAsync();
                     ErrorLabel.Text = GetTimeNow() + ": Notify callback function registered successfully.";
@@ -190,7 +174,7 @@ public partial class BtDataPage : ContentPage
         return timestamp.Hour.ToString() + ":" + timestamp.Minute.ToString() + ":" + timestamp.Second.ToString();
     }
 
-    private async void SendBluetoothRequest(string request)
+    private async Task SendBluetoothRequest(string request)
     {
         try
         {
@@ -293,8 +277,6 @@ public partial class BtDataPage : ContentPage
     { "Run time since engine start", "1F" },        // Mode 01 PID 1F
     { "PIDs supported [21 - 40]", "20" }            // Mode 01 PID 20
 };
-
-
 
     private void ProcessPIDs(string binaryString)
     {
@@ -424,39 +406,45 @@ public partial class BtDataPage : ContentPage
     // Function to send data based on the checked boxes
     private async Task SendDataForCheckedBoxes()
     {
-        while (true) // Continuous sending
+        foreach (var option in checkboxStates)
         {
-            foreach (var option in checkboxStates)
+            if (option.Value) // If the checkbox is checked
             {
-                if (option.Value) // If the checkbox is checked
-                {
-                    // Get the corresponding hex value from the optionHexMapping dictionary
-                    string hexValue = optionHexMapping[option.Key]; // Already the correct hex value
-                    await SendData(hexValue); // Send the correct hex value
-                }
+                // Get the corresponding hex value from the optionHexMapping dictionary
+                string hexValue = optionHexMapping[option.Key]; // Already the correct hex value
+
+                // Send the request
+                await SendBluetoothRequest(hexValue);
+
+                // Wait for the corresponding response
+                await WaitForBluetoothResponse(hexValue);
             }
-
-
-            // Pause before sending data again (adjust the delay as needed)
-            await Task.Delay(1000);
         }
     }
 
-    //function for sending data via Bluetooth
-    private async Task SendData(string hexValue)
+    private TaskCompletionSource<string> responseTaskCompletionSource;
+
+    private async Task WaitForBluetoothResponse(string expectedResponseStart)
     {
-        // Implement the Bluetooth data sending logic here
-        // For example, send the hex value to the connected Bluetooth device
-        Console.WriteLine($"Sending data: {hexValue}");
-        
-        //
-        //Send
-            //wait 
-            //stop
-            //delay 10ms
+        // Initialize a new TaskCompletionSource to wait for the response
+        responseTaskCompletionSource = new TaskCompletionSource<string>();
+
+        // Wait until the response starts with the expected value
+        while (true)
+        {
+            string receivedResponse = await responseTaskCompletionSource.Task;
+
+            if (receivedResponse.StartsWith(expectedResponseStart))
+            {
+                // Correct response received, exit the loop
+                break;
+            }
+            else
+            {
+                // If response does not match, continue waiting (this may also handle retry logic)
+                await Task.Delay(100); // Optional delay to avoid tight looping
+            }
+        }
     }
-
-
-
 
 }
