@@ -314,12 +314,33 @@ public partial class BtDataPage : ContentPage
             // Check if the corresponding bit in binaryString is set
             if ((binaryString[binaryString.Length - 1 - option.Value] == '1'))
             {
-                var checkBox = new CheckBox { IsChecked = false };
-                var label = new Label { Text = option.Key };
+                // Create a HorizontalStackLayout for each option
+                var optionLayout = new HorizontalStackLayout
+                {
+                    HorizontalOptions = LayoutOptions.FillAndExpand, // Ensure it takes the full width
+                    Spacing = 10 // Add spacing between elements
+                };
 
-                // Add each label and checkbox to the scrollable layout
-                scrollableLayout.Children.Add(label);
-                scrollableLayout.Children.Add(checkBox);
+                var label = new Label
+                {
+                    Text = option.Key,
+                    VerticalOptions = LayoutOptions.Center, // Align label to the center vertically
+                    HorizontalOptions = LayoutOptions.StartAndExpand // Left align the label
+                };
+
+                var checkBox = new CheckBox
+                {
+                    IsChecked = false,
+                    HorizontalOptions = LayoutOptions.End, // Align checkbox to the right
+                    VerticalOptions = LayoutOptions.Center // Align checkbox to the center vertically
+                };
+
+                // Add the label and checkbox to the HorizontalStackLayout
+                optionLayout.Children.Add(label);
+                optionLayout.Children.Add(checkBox);
+
+                // Add each HorizontalStackLayout (label + checkbox) to the scrollable layout
+                scrollableLayout.Children.Add(optionLayout);
             }
         }
 
@@ -342,5 +363,6 @@ public partial class BtDataPage : ContentPage
         // Show the modal
         await Navigation.PushModalAsync(modalPage);
     }
+
 
 }
