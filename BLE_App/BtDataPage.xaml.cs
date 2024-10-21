@@ -278,6 +278,10 @@ public partial class BtDataPage : ContentPage
         }
     }
 
+    // Dictionary to store checkbox states for each option
+    private Dictionary<string, bool> checkboxStates = new Dictionary<string, bool>();
+
+    // This function will be called when the plus button is clicked
     private async void plusButton_Clicked(object sender, EventArgs e)
     {
         // Create the main layout
@@ -290,9 +294,9 @@ public partial class BtDataPage : ContentPage
         var closeButton = new Button
         {
             Text = "X",
-            BackgroundColor = Colors.DarkBlue, // Optional: make it transparent
-            TextColor = Colors.White, // Change this to your preferred color
-            VerticalOptions = LayoutOptions.Start // Place it at the top
+            BackgroundColor = Colors.DarkBlue,
+            TextColor = Colors.White,
+            VerticalOptions = LayoutOptions.Start
         };
 
         // Event for the close button
@@ -300,6 +304,9 @@ public partial class BtDataPage : ContentPage
         {
             // Close the modal when clicked
             await Navigation.PopModalAsync();
+
+            // Start sending data for checked boxes
+            _ = SendDataForCheckedBoxes();
         };
 
         // Add the close button to the layout
@@ -319,34 +326,38 @@ public partial class BtDataPage : ContentPage
                 {
                     ColumnDefinitions =
                 {
-                    new ColumnDefinition { Width = GridLength.Star }, // Label column (auto-expand)
-                    new ColumnDefinition { Width = GridLength.Auto }  // Checkbox column (fixed size)
+                    new ColumnDefinition { Width = GridLength.Star }, // Label column
+                    new ColumnDefinition { Width = GridLength.Auto }  // Checkbox column
                 },
-                    Padding = new Thickness(0, 5) // Add padding for better spacing between rows
+                    Padding = new Thickness(0, 5)
                 };
 
                 var label = new Label
                 {
                     Text = option.Key,
-                    VerticalOptions = LayoutOptions.Center, // Align label to the center vertically
-                    HorizontalOptions = LayoutOptions.Start // Left align the label
+                    VerticalOptions = LayoutOptions.Center,
+                    HorizontalOptions = LayoutOptions.Start
                 };
 
                 var checkBox = new CheckBox
                 {
-                    IsChecked = false,
-                    VerticalOptions = LayoutOptions.Center, // Align checkbox to the center vertically
-                    HorizontalOptions = LayoutOptions.End   // Align checkbox to the right
+                    IsChecked = checkboxStates.ContainsKey(option.Key) && checkboxStates[option.Key], // Restore saved state
+                    VerticalOptions = LayoutOptions.Center,
+                    HorizontalOptions = LayoutOptions.End
+                };
+
+                // Event handler for checkbox state changes
+                checkBox.CheckedChanged += (s, args) =>
+                {
+                    // Save the checkbox state
+                    checkboxStates[option.Key] = checkBox.IsChecked;
                 };
 
                 // Add label and checkbox to the Grid
-                optionGrid.Children.Add(label);    // Add label to the Grid
-                Grid.SetColumn(label, 0);          // Set label column to 0
-                Grid.SetRow(label, 0);             // Set label row to 0
-
-                optionGrid.Children.Add(checkBox); // Add checkbox to the Grid
-                Grid.SetColumn(checkBox, 1);       // Set checkbox column to 1
-                Grid.SetRow(checkBox, 0);          // Set checkbox row to 0
+                optionGrid.Children.Add(label);
+                Grid.SetColumn(label, 0);
+                optionGrid.Children.Add(checkBox);
+                Grid.SetColumn(checkBox, 1);
 
                 // Add the optionGrid to the scrollable layout
                 scrollableLayout.Children.Add(optionGrid);
@@ -357,7 +368,7 @@ public partial class BtDataPage : ContentPage
         var scrollView = new ScrollView
         {
             Content = scrollableLayout,
-            VerticalOptions = LayoutOptions.FillAndExpand // Allow it to fill the available vertical space
+            VerticalOptions = LayoutOptions.FillAndExpand
         };
 
         // Add the ScrollView to the main layout
@@ -372,5 +383,36 @@ public partial class BtDataPage : ContentPage
         // Show the modal
         await Navigation.PushModalAsync(modalPage);
     }
+
+    // Function to send data based on the checked boxes
+    private async Task SendDataForCheckedBoxes()
+    {
+        while (true) // Continuous sending
+        {
+            foreach (var option in checkboxStates)
+            {
+                if (option.Value) // If the checkbox is checked
+                {
+                    // Send the corresponding hex value based on the option
+                    string hexValue = (1 << optionMapping[option.Key]).ToString("X2"); // Convert bit to hex
+                    await SendData(hexValue);
+                }
+            }
+
+            // Pause before sending data again (adjust the delay as needed)
+            await Task.Delay(1000);
+        }
+    }
+
+    // Example function for sending data via Bluetooth
+    private async Task SendData(string hexValue)
+    {
+        // Implement the Bluetooth data sending logic here
+        // For example, send the hex value to the connected Bluetooth device
+        Console.WriteLine($"Sending data: {hexValue}");
+    }
+
+
+
 
 }
