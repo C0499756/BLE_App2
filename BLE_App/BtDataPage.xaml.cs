@@ -314,33 +314,42 @@ public partial class BtDataPage : ContentPage
             // Check if the corresponding bit in binaryString is set
             if ((binaryString[binaryString.Length - 1 - option.Value] == '1'))
             {
-                // Create a HorizontalStackLayout for each option
-                var optionLayout = new HorizontalStackLayout
+                // Create a Grid for each option
+                var optionGrid = new Grid
                 {
-                    HorizontalOptions = LayoutOptions.FillAndExpand, // Ensure it takes the full width
-                    Spacing = 10 // Add spacing between elements
+                    ColumnDefinitions =
+                {
+                    new ColumnDefinition { Width = GridLength.Star }, // Label column (auto-expand)
+                    new ColumnDefinition { Width = GridLength.Auto }  // Checkbox column (fixed size)
+                },
+                    Padding = new Thickness(0, 5) // Add padding for better spacing between rows
                 };
 
                 var label = new Label
                 {
                     Text = option.Key,
                     VerticalOptions = LayoutOptions.Center, // Align label to the center vertically
-                    HorizontalOptions = LayoutOptions.StartAndExpand // Left align the label
+                    HorizontalOptions = LayoutOptions.Start // Left align the label
                 };
 
                 var checkBox = new CheckBox
                 {
                     IsChecked = false,
-                    HorizontalOptions = LayoutOptions.End, // Align checkbox to the right
-                    VerticalOptions = LayoutOptions.Center // Align checkbox to the center vertically
+                    VerticalOptions = LayoutOptions.Center, // Align checkbox to the center vertically
+                    HorizontalOptions = LayoutOptions.End   // Align checkbox to the right
                 };
 
-                // Add the label and checkbox to the HorizontalStackLayout
-                optionLayout.Children.Add(label);
-                optionLayout.Children.Add(checkBox);
+                // Add label and checkbox to the Grid
+                optionGrid.Children.Add(label);    // Add label to the Grid
+                Grid.SetColumn(label, 0);          // Set label column to 0
+                Grid.SetRow(label, 0);             // Set label row to 0
 
-                // Add each HorizontalStackLayout (label + checkbox) to the scrollable layout
-                scrollableLayout.Children.Add(optionLayout);
+                optionGrid.Children.Add(checkBox); // Add checkbox to the Grid
+                Grid.SetColumn(checkBox, 1);       // Set checkbox column to 1
+                Grid.SetRow(checkBox, 0);          // Set checkbox row to 0
+
+                // Add the optionGrid to the scrollable layout
+                scrollableLayout.Children.Add(optionGrid);
             }
         }
 
@@ -363,6 +372,5 @@ public partial class BtDataPage : ContentPage
         // Show the modal
         await Navigation.PushModalAsync(modalPage);
     }
-
 
 }
