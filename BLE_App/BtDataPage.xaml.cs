@@ -258,6 +258,43 @@ public partial class BtDataPage : ContentPage
     { "PIDs supported [21 - 40]", 31 }            // Bit 31
 };
 
+    private Dictionary<string, string> optionHexMapping = new Dictionary<string, string>
+{
+    { "Monitor status since DTCs cleared", "01" },  // Mode 01 PID 01
+    { "Freeze DTC", "02" },                         // Mode 01 PID 02
+    { "Fuel system status", "03" },                 // Mode 01 PID 03
+    { "Calculated engine load", "04" },             // Mode 01 PID 04
+    { "Engine coolant temperature", "05" },         // Mode 01 PID 05
+    { "Short term fuel trim (bank 1)", "06" },      // Mode 01 PID 06
+    { "Long term fuel trim (bank 1)", "07" },       // Mode 01 PID 07
+    { "Short term fuel trim (bank 2)", "08" },      // Mode 01 PID 08
+    { "Long term fuel trim (bank 2)", "09" },       // Mode 01 PID 09
+    { "Fuel pressure (gauge pressure)", "0A" },     // Mode 01 PID 0A
+    { "Intake manifold absolute pressure", "0B" },  // Mode 01 PID 0B
+    { "Engine speed", "0C" },                       // Mode 01 PID 0C
+    { "Vehicle speed", "0D" },                      // Mode 01 PID 0D
+    { "Timing advance", "0E" },                     // Mode 01 PID 0E
+    { "Intake air temperature", "0F" },             // Mode 01 PID 0F
+    { "Mass air flow sensor air flow rate", "10" }, // Mode 01 PID 10
+    { "Throttle position", "11" },                  // Mode 01 PID 11
+    { "Commanded secondary air status", "12" },     // Mode 01 PID 12
+    { "Oxygen sensors present (2 banks)", "13" },   // Mode 01 PID 13
+    { "Oxygen sensor 1 (voltage)", "14" },          // Mode 01 PID 14
+    { "Oxygen sensor 2 (voltage)", "15" },          // Mode 01 PID 15
+    { "Oxygen sensor 3 (voltage)", "16" },          // Mode 01 PID 16
+    { "Oxygen sensor 4 (voltage)", "17" },          // Mode 01 PID 17
+    { "Oxygen sensor 5 (voltage)", "18" },          // Mode 01 PID 18
+    { "Oxygen sensor 6 (voltage)", "19" },          // Mode 01 PID 19
+    { "Oxygen sensor 7 (voltage)", "1A" },          // Mode 01 PID 1A
+    { "Oxygen sensor 8 (voltage)", "1B" },          // Mode 01 PID 1B
+    { "OBD standards the vehicle conforms to", "1C" }, // Mode 01 PID 1C
+    { "Oxygen sensors present (4 banks)", "1D" },   // Mode 01 PID 1D
+    { "Auxiliary input status", "1E" },             // Mode 01 PID 1E
+    { "Run time since engine start", "1F" },        // Mode 01 PID 1F
+    { "PIDs supported [21 - 40]", "20" }            // Mode 01 PID 20
+};
+
+
 
     private void ProcessPIDs(string binaryString)
     {
@@ -393,23 +430,29 @@ public partial class BtDataPage : ContentPage
             {
                 if (option.Value) // If the checkbox is checked
                 {
-                    // Send the corresponding hex value based on the option
-                    string hexValue = (1 << optionMapping[option.Key]).ToString("X2"); // Convert bit to hex
-                    await SendData(hexValue);
+                    // Get the corresponding hex value from the optionHexMapping dictionary
+                    string hexValue = optionHexMapping[option.Key]; // Already the correct hex value
+                    await SendData(hexValue); // Send the correct hex value
                 }
             }
+
 
             // Pause before sending data again (adjust the delay as needed)
             await Task.Delay(1000);
         }
     }
 
-    // Example function for sending data via Bluetooth
+    //function for sending data via Bluetooth
     private async Task SendData(string hexValue)
     {
         // Implement the Bluetooth data sending logic here
         // For example, send the hex value to the connected Bluetooth device
         Console.WriteLine($"Sending data: {hexValue}");
+        
+        //Send
+            //wait 
+            //stop
+            //delay 10ms
     }
 
 
