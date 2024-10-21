@@ -1,4 +1,4 @@
-// This code is adapted from MoThunderz's Xamarin BLE App for Android (versions 12 and higher). 
+//This code is adapted from MoThunderz's Xamarin BLE App for Android (versions 12 and higher). 
 // Modified for .NET MAUI to meet the requirements of the Wireless Automotive Telemetry System. 
 // Code modified by the Laplogic Team. For more details, see the video: https://www.youtube.com/watch?v=SfGuLsKeOeE
 
@@ -54,18 +54,22 @@ public partial class BtDataPage : ContentPage
             if (_selectedService != null)
             {
                 var charListReadOnly = await _selectedService.GetCharacteristicsAsync();
+
                 _charList.Clear();
+                var charListStr = new List<String>();
                 ICharacteristic unknownCharacteristic = null;
 
-                // Populate characteristic list and look for the "Unknown Characteristic"
-                foreach (var characteristic in charListReadOnly)
+                for (int i = 0; i < charListReadOnly.Count; i++)
                 {
-                    _charList.Add(characteristic);
+                    _charList.Add(charListReadOnly[i]);
+                    charListStr.Add(charListReadOnly[i].Name);
 
-                    if (characteristic.Name == "Unknown characteristic")
+                    // Check for the "Unknown Characteristic"
+                    if (charListReadOnly[i].Name == "Unknown characteristic")
                     {
-                        unknownCharacteristic = characteristic;
+                        unknownCharacteristic = charListReadOnly[i];
                         break; // Exit loop once found
+
                     }
                 }
 
@@ -73,28 +77,27 @@ public partial class BtDataPage : ContentPage
                 if (unknownCharacteristic != null)
                 {
                     _char = unknownCharacteristic;
+                    // Display the characteristic name and UUID
                     bleChar.Text = $"Selected BLE characteristic: {_char.Name}";
-
-                    // Automatically call RegisterButton_Clicked after selecting the characteristic
+                    //Automaticlaly Call RegisterButton_Clicked after selecting the character
                     RegisterButton_Clicked(null, null);
-
                     await Task.Delay(250); // Wait for 250ms
-
                     // Check if the request has already been sent
                     if (!_hasSentPidRequest)
                     {
-                        await WaitForPIDListAsync();
+                        SendBluetoothRequest("PIDs");
+                        _hasSentPidRequest = true; // Set the flag to true after sending
                     }
                 }
             }
             else
             {
-                ErrorLabel.Text += $"{GetTimeNow()}: Error initializing UART GATT service.";
+                ErrorLabel.Text += GetTimeNow() + ": Error initializing UART GATT service.";
             }
         }
-        catch (Exception ex)
+        catch
         {
-            ErrorLabel.Text += $"{GetTimeNow()}: Error initializing UART GATT service: {ex.Message}";
+            ErrorLabel.Text += GetTimeNow() + ": Error initializing UART GATT service.";
         }
     }
 
@@ -119,8 +122,58 @@ public partial class BtDataPage : ContentPage
                         // Receive the data as bytes
                         byte[] receivedBytes = args.Characteristic.Value;
 
-                        // Process the PID information
-                        await ProcessReceivedData(receivedBytes);
+                        // Convert the bytes to characters
+                        char[] receivedChars = new char[receivedBytes.Length];
+                        for (int i = 0; i < receivedBytes.Length; i++)
+                        {
+                            receivedChars[i] = (char)receivedBytes[i]; // Convert each byte to a char
+                        }
+
+                        // Convert the characters to a string
+                        string receivedString = new string(receivedChars);
+
+                        // Check if this is the first PID request
+                        if (!_hasReceivedPidRequest)
+                        {
+                            // Set the flag to true after the first PID information is received
+                            _hasReceivedPidRequest = true;
+
+                            // Process the PID information
+                            if (receivedBytes.Length == 4)
+                            {
+                                // Handle the 32-bit PID information (don't send to the server)
+                                binaryString = string.Join("", receivedBytes.Select(b => Convert.ToString(b, 2).PadLeft(8, '0')));
+                                if (Is32BitBinary(binaryString))
+                                {
+                                    await MainThread.InvokeOnMainThreadAsync(() =>
+                                    {
+                                        Output.Text += "Received valid 32-bit binary (first PID request): " + binaryString + "\n";
+                                    });
+                                    ProcessPIDs(binaryString); // Process the 32-bit PID data
+                                }
+                                else
+                                {
+                                    await MainThread.InvokeOnMainThreadAsync(() =>
+                                    {
+                                        Output.Text += "Invalid 32-bit binary data (first PID request): " + binaryString + "\n";
+
+                                    });
+                                }
+                            }
+
+                            // Return early after processing the first PID request
+                            return;
+                        }
+
+                        // For regular strings, send to the MQTT server
+                        mqttServer.PublishMessage(receivedString);
+
+                        // Update UI elements on the main thread
+                        MainThread.BeginInvokeOnMainThread(() =>
+                        {
+                            // Update a Label or other UI element
+                            Output.Text += "Received String: " + receivedString + "\n";
+                        });
                     };
 
                     await _char.StartUpdatesAsync();
@@ -142,81 +195,13 @@ public partial class BtDataPage : ContentPage
         }
     }
 
-    private async Task ProcessReceivedData(byte[] receivedBytes)
-    {
-        // Convert the bytes to characters
-        char[] receivedChars = new char[receivedBytes.Length];
-        for (int i = 0; i < receivedBytes.Length; i++)
-        {
-            receivedChars[i] = (char)receivedBytes[i]; // Convert each byte to a char
-        }
-
-        // Convert the characters to a string
-        string receivedString = new string(receivedChars);
-
-        // Check if this is the first PID request
-        if (!_hasReceivedPidRequest)
-        {
-            // Set the flag to true after the first PID information is received
-            _hasReceivedPidRequest = true;
-
-            // Process the PID information
-            if (receivedBytes.Length == 4)
-            {
-                // Handle the 32-bit PID information
-                binaryString = string.Join("", receivedBytes.Select(b => Convert.ToString(b, 2).PadLeft(8, '0')));
-                if (Is32BitBinary(binaryString))
-                {
-                    await MainThread.InvokeOnMainThreadAsync(() =>
-                    {
-                        Output.Text += "Received valid 32-bit binary (first PID request): " + binaryString + "\n";
-                        // Make the PlusButton visible after receiving valid PIDs
-                        PlusButton.IsVisible = true;
-                    });
-                    ProcessPIDs(binaryString); // Process the 32-bit PID data
-                }
-                else
-                {
-                    await MainThread.InvokeOnMainThreadAsync(() =>
-                    {
-                        Output.Text += "Invalid 32-bit binary data (first PID request): " + binaryString + "\n";
-                    });
-                }
-            }
-
-            // Return early after processing the first PID request
-            return;
-        }
-    }
-
-    private async Task WaitForPIDListAsync()
-    {
-        int attempts = 0;
-        while (attempts < 3) // Retry up to 3 times
-        {
-            // Wait for the PID list to be received
-            if (_hasReceivedPidRequest)
-            {
-                return; // Exit if received
-            }
-
-            // Wait for 5 seconds
-            await Task.Delay(5000);
-            attempts++;
-            SendBluetoothRequest("PIDs"); // Resend the request
-        }
-
-        // Handle case where PID list wasn't received
-        await ShowError("PID list not received after multiple attempts.");
-    }
-
     private bool Is32BitBinary(string data)
     {
         // Check if the data is exactly 32 characters long and consists of '0's and '1's
         return data.Length == 32 && data.All(c => c == '0' || c == '1');
     }
 
-    private async Task ShowError(string message)
+    private async void ShowError(string message)
     {
         ErrorLabel.Text = message;
         await Task.Delay(60000); // Wait for 60 seconds

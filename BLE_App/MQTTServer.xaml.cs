@@ -1,5 +1,3 @@
-
-
 using MQTTnet.Client;
 using MQTTnet;
 

@@ -22,7 +22,7 @@ Code modified by the Laplogic Team. For more details, see the video: https://www
         </ScrollView>
         <Label Text="" TextColor="DarkRed" x:Name="ErrorLabel"/>
         <Button
-            x:Name="PlusButton"
+            x:Name="plusButton"
             Text="+"
             BackgroundColor="DarkBlue"
             CornerRadius="40"
