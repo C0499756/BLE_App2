@@ -27,6 +27,7 @@ public partial class BtDataPage : ContentPage
     private MQTTServer mqttServer;
     // Add a boolean flag to track if the request has been sent
     private bool _hasSentPidRequest = false;
+    private bool _hasReceivedPidRequest = false;
 
     public BtDataPage(IDevice connectedDevice, IService selectedService)
     {
@@ -130,7 +131,39 @@ public partial class BtDataPage : ContentPage
                         // Convert the characters to a string
                         string receivedString = new string(receivedChars);
 
-                        // Publish the received string to the MQTT server
+                        // Check if this is the first PID request
+                        if (!_hasReceivedPidRequest)
+                        {
+                            // Set the flag to true after the first PID information is received
+                            _hasReceivedPidRequest = true;
+
+                            // Process the PID information
+                            if (receivedBytes.Length == 4)
+                            {
+                                // Handle the 32-bit PID information (don't send to the server)
+                                binaryString = string.Join("", receivedBytes.Select(b => Convert.ToString(b, 2).PadLeft(8, '0')));
+                                if (Is32BitBinary(binaryString))
+                                {
+                                    await MainThread.InvokeOnMainThreadAsync(() =>
+                                    {
+                                        Output.Text += "Received valid 32-bit binary (first PID request): " + binaryString + "\n";
+                                    });
+                                    ProcessPIDs(binaryString); // Process the 32-bit PID data
+                                }
+                                else
+                                {
+                                    await MainThread.InvokeOnMainThreadAsync(() =>
+                                    {
+                                        Output.Text += "Invalid 32-bit binary data (first PID request): " + binaryString + "\n";
+                                    });
+                                }
+                            }
+
+                            // Return early after processing the first PID request
+                            return;
+                        }
+
+                        // For regular strings, send to the MQTT server
                         mqttServer.PublishMessage(receivedString);
 
                         // Update UI elements on the main thread
@@ -138,36 +171,7 @@ public partial class BtDataPage : ContentPage
                         {
                             // Update a Label or other UI element
                             Output.Text += "Received String: " + receivedString + "\n";
-
                         });
-
-                        // Check if the task is waiting for a response
-                        if (responseTaskCompletionSource != null && !responseTaskCompletionSource.Task.IsCompleted)
-                        {
-                            // Complete the task with the received response
-                            responseTaskCompletionSource.TrySetResult(receivedString);
-                        }
-
-                        // Handle additional response processing if needed (like binary string conversion)
-                        if (receivedBytes.Length == 4)
-                        {
-                            binaryString = string.Join("", receivedBytes.Select(b => Convert.ToString(b, 2).PadLeft(8, '0')));
-                            if (Is32BitBinary(binaryString))
-                            {
-                                await MainThread.InvokeOnMainThreadAsync(() =>
-                                {
-                                    Output.Text += "Received valid 32-bit binary: " + binaryString + "\n";
-                                });
-                                ProcessPIDs(binaryString);
-                            }
-                            else
-                            {
-                                await MainThread.InvokeOnMainThreadAsync(() =>
-                                {
-                                    Output.Text += "Invalid 32-bit binary data: " + binaryString + "\n";
-                                });
-                            }
-                        }
                     };
 
                     await _char.StartUpdatesAsync();
