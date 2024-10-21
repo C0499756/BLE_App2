@@ -117,8 +117,29 @@ public partial class BtDataPage : ContentPage
                 {
                     _char.ValueUpdated += async (o, args) =>
                     {
+                        // Receive the data as bytes
                         byte[] receivedBytes = args.Characteristic.Value;
-                        string receivedString = BitConverter.ToString(receivedBytes); // Convert the bytes to a string
+
+                        // Convert the bytes to characters
+                        char[] receivedChars = new char[receivedBytes.Length];
+                        for (int i = 0; i < receivedBytes.Length; i++)
+                        {
+                            receivedChars[i] = (char)receivedBytes[i]; // Convert each byte to a char
+                        }
+
+                        // Convert the characters to a string
+                        string receivedString = new string(receivedChars);
+
+                        // Publish the received string to the MQTT server
+                        mqttServer.PublishMessage(receivedString);
+
+                        // Update UI elements on the main thread
+                        MainThread.BeginInvokeOnMainThread(() =>
+                        {
+                            // Update a Label or other UI element
+                            Output.Text += "Received String: " + receivedString + "\n";
+
+                        });
 
                         // Check if the task is waiting for a response
                         if (responseTaskCompletionSource != null && !responseTaskCompletionSource.Task.IsCompleted)
@@ -432,7 +453,6 @@ public partial class BtDataPage : ContentPage
                 // Wait for the corresponding response
                 await WaitForBluetoothResponse(hexValue);
 
-                mqttServer.PublishMessage(hexValue);
             }
         }
     }
