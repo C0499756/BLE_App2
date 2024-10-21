@@ -23,6 +23,11 @@ public partial class BtDataPage : ContentPage
     private ICharacteristic _char;
     string binaryString;
 
+    // Create an instance of MQTTServer
+    private MQTTServer mqttServer;
+    // Add a boolean flag to track if the request has been sent
+    private bool _hasSentPidRequest = false;
+
     public BtDataPage(IDevice connectedDevice, IService selectedService)
     {
         InitializeComponent();
@@ -30,6 +35,8 @@ public partial class BtDataPage : ContentPage
         _connectedDevice = connectedDevice;
         _selectedService = selectedService;
         _char = null;
+
+        mqttServer = new MQTTServer(); //Initalize MQTT server
 
         bleDevice.Text = "Selected BLE device: " + _connectedDevice.Name;
         bleService.Text = "Selected BLE service: " + _selectedService.Name;
@@ -60,6 +67,7 @@ public partial class BtDataPage : ContentPage
                     {
                         unknownCharacteristic = charListReadOnly[i];
                         break; // Exit loop once found
+
                     }
                 }
 
@@ -72,7 +80,12 @@ public partial class BtDataPage : ContentPage
                     //Automaticlaly Call RegisterButton_Clicked after selecting the character
                     RegisterButton_Clicked(null, null);
                     await Task.Delay(250); // Wait for 250ms
-                    SendBluetoothRequest("PIDs");
+                    // Check if the request has already been sent
+                    if (!_hasSentPidRequest)
+                    {
+                        SendBluetoothRequest("PIDs");
+                        _hasSentPidRequest = true; // Set the flag to true after sending
+                    }
                 }
             }
             else
@@ -134,7 +147,7 @@ public partial class BtDataPage : ContentPage
                                 });
                             }
                         }
-                    }
+                    };
 
                     await _char.StartUpdatesAsync();
                     ErrorLabel.Text = GetTimeNow() + ": Notify callback function registered successfully.";
@@ -418,6 +431,8 @@ public partial class BtDataPage : ContentPage
 
                 // Wait for the corresponding response
                 await WaitForBluetoothResponse(hexValue);
+
+                mqttServer.PublishMessage(hexValue);
             }
         }
     }

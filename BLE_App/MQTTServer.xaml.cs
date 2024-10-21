@@ -67,18 +67,17 @@ namespace BLE_App
             PublishMessage(MsgTx);
         }
 
-        private void PublishMessage(string msgTx)
+        public void PublishMessage(string msgTx)
         {
-            string messsagePayload = "RPM"; //send the packet
             var message = new MqttApplicationMessageBuilder() //new message
-                .WithTopic("usb/Demo") //the topic of our broker
-                .WithPayload(messsagePayload) //sending this message
+                .WithTopic("WATS") //the topic of our broker
+                .WithPayload(msgTx) //sending this message
                 .WithQualityOfServiceLevel(MQTTnet.Protocol.MqttQualityOfServiceLevel.AtLeastOnce)
                 .Build();
             if (client.IsConnected)
             {
                 client.PublishAsync(message);
-                MsgText = $"Message sent: {messsagePayload}"; //store the message that was sent
+                MsgText = $"Message sent: {msgTx}"; //store the message that was sent
                 lblConnected.Text = CnctMsg; //show this when connected 
                 lblMessage.Text = MsgText; //show the message sent
 
