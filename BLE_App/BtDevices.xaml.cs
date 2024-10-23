@@ -4,6 +4,7 @@ using Plugin.BLE.Abstractions.Contracts;
 using System;
 using System.Collections.ObjectModel;
 using System.Threading.Tasks;
+using System.Timers;
 
 namespace BLE_App
 {
@@ -12,6 +13,10 @@ namespace BLE_App
         private IAdapter _bluetoothAdapter;
         private ObservableCollection<IDevice> _gattDevices = new ObservableCollection<IDevice>();
         private IDevice _connectedDevice;
+        private System.Timers.Timer _connectionCheckTimer;
+        private DateTime _lastDataReceivedTime;
+        private const int ConnectionCheckInterval = 6000; //check every 6 seconds
+        private bool _hasAlertedDisconnection; // To track if alert has been shown
 
         public BtDevices()
         {
@@ -21,6 +26,10 @@ namespace BLE_App
 
             // Bind the device ListView to the ObservableCollection
             foundBleDevicesListView.ItemsSource = _gattDevices;
+
+            //Subscribe to DeviceDisconnected event
+            _bluetoothAdapter.DeviceDisconnected += OnDeviceDisconnected;
+
         }
 
         // Check for BLE permission
@@ -90,6 +99,55 @@ namespace BLE_App
             }
         }
 
+        // Handle device disconnection
+        private async void OnDeviceDisconnected(object sender, Plugin.BLE.Abstractions.EventArgs.DeviceEventArgs e)
+        {
+            if (_connectedDevice != null && e.Device.Id == _connectedDevice.Id)
+            {
+                // Stop the connection check timer
+                _connectionCheckTimer?.Stop();
+
+                // Navigate back to BtDevices page and display a message
+                await MainThread.InvokeOnMainThreadAsync(async () =>
+                {
+                    await DisplayAlert("Bluetooth Device Disconnected", "Return to Devices Page", "OK");
+                    await Navigation.PopToRootAsync();  // Navigate back to root page (BtDevices)
+                });
+            }
+        }
+
+        // Start the connection check timer
+        private void StartConnectionCheckTimer()
+        {
+            _connectionCheckTimer = new System.Timers.Timer(ConnectionCheckInterval);
+            _connectionCheckTimer.Elapsed += OnConnectionCheckTimerElapsed;
+            _connectionCheckTimer.Start();
+        }
+
+        // Check if the device is still connected
+        private void OnConnectionCheckTimerElapsed(object sender, ElapsedEventArgs e)
+        {
+            if (_connectedDevice != null && (DateTime.Now - _lastDataReceivedTime).TotalMilliseconds > ConnectionCheckInterval)
+            {
+                // If no data received for the interval duration, consider it disconnected
+                if (!_hasAlertedDisconnection)
+                {
+                    _hasAlertedDisconnection = true; //prevent multiple alerts
+                    MainThread.BeginInvokeOnMainThread(async () =>
+                    {
+                    await DisplayAlert("Bluetooth Device Disconnected", "No data received. Returning to Devices Page.", "OK");
+                    await Navigation.PopToRootAsync();
+                    });
+                }
+
+            }
+            else
+            {
+                //reset the alert if data is received again
+                _hasAlertedDisconnection= false;
+            }
+        }
+
         // Select and navigate to the Unknown Service
         private async Task SelectUnknownService(IDevice connectedDevice)
         {
@@ -130,6 +188,14 @@ namespace BLE_App
             await Navigation.PushAsync(new BtDataPage(_connectedDevice, service));
         }
 
+        // Handle data received from the device (update this method according to your data reception logic)
+        private void OnDataReceived(object sender, EventArgs e)
+        {
+            // Update the last data received time
+            _lastDataReceivedTime = DateTime.Now;
+
+        }
+
         protected override async void OnAppearing()
         {
             base.OnAppearing();
@@ -146,6 +212,9 @@ namespace BLE_App
 
             // Restart the scanning process
             StartContinuousScan();
+
+            //Start the connection chekc timer 
+            StartConnectionCheckTimer();
         }
 
         protected override async void OnDisappearing()
