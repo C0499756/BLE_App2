@@ -21,9 +21,6 @@ namespace BLE_App
 
             // Bind the device ListView to the ObservableCollection
             foundBleDevicesListView.ItemsSource = _gattDevices;
-
-            // Start scanning when the page is loaded
-            StartContinuousScan();
         }
 
         // Check for BLE permission
@@ -51,14 +48,9 @@ namespace BLE_App
 
             _bluetoothAdapter.DeviceDiscovered += DeviceDiscoveredHandler;
 
-            while (true) // Infinite loop for continuous scanning
+            if (!_bluetoothAdapter.IsScanning)
             {
-                if (!_bluetoothAdapter.IsScanning)
-                {
-                    await _bluetoothAdapter.StartScanningForDevicesAsync();
-                }
-
-                await Task.Delay(5000); // Adjust the delay based on your needs
+                await _bluetoothAdapter.StartScanningForDevicesAsync();
             }
         }
 
@@ -138,15 +130,35 @@ namespace BLE_App
             await Navigation.PushAsync(new BtDataPage(_connectedDevice, service));
         }
 
-        protected override void OnDisappearing()
+        protected override async void OnAppearing()
+        {
+            base.OnAppearing();
+
+            // If there is a connected device, disconnect when coming back to this page
+            if (_connectedDevice != null && _connectedDevice.State == DeviceState.Connected)
+            {
+                await _bluetoothAdapter.DisconnectDeviceAsync(_connectedDevice);
+                _connectedDevice = null;
+            }
+
+            // Clear the list of previously found devices
+            _gattDevices.Clear();
+
+            // Restart the scanning process
+            StartContinuousScan();
+        }
+
+        protected override async void OnDisappearing()
         {
             base.OnDisappearing();
 
+            // Stop scanning if it is still active
             if (_bluetoothAdapter.IsScanning)
             {
-                _bluetoothAdapter.StopScanningForDevicesAsync();
+                await _bluetoothAdapter.StopScanningForDevicesAsync();
             }
+
+            // No need to disconnect here, just clean up if necessary
         }
     }
 }
-
