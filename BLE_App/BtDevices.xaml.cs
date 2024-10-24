@@ -168,6 +168,13 @@ namespace BLE_App
         {
             base.OnAppearing();
 
+            // If Bluetooth is off when the page appears, show an alert
+            if (CrossBluetoothLE.Current.State == BluetoothState.Off)
+            {
+                await DisplayAlert("Bluetooth Disabled", "Please turn Bluetooth on to use this app.", "OK");
+                return;  // Stop further execution if Bluetooth is off
+            }
+
             // If there is a connected device, disconnect when coming back to this page
             if (_connectedDevice != null && _connectedDevice.State == DeviceState.Connected)
             {
