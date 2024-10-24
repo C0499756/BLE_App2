@@ -4,7 +4,6 @@ using Plugin.BLE.Abstractions.Contracts;
 using System;
 using System.Collections.ObjectModel;
 using System.Threading.Tasks;
-using System.Timers;
 
 namespace BLE_App
 {
@@ -23,9 +22,25 @@ namespace BLE_App
             // Bind the device ListView to the ObservableCollection
             foundBleDevicesListView.ItemsSource = _gattDevices;
 
-            //Subscribe to DeviceDisconnected event
+            // Subscribe to DeviceDisconnected event
             _bluetoothAdapter.DeviceDisconnected += OnDeviceDisconnected;
 
+            // Subscribe to Bluetooth state changes for the phone itself
+            CrossBluetoothLE.Current.StateChanged += OnBluetoothStateChanged;
+        }
+
+        // Handle Bluetooth state changes for the phone itself
+        private async void OnBluetoothStateChanged(object sender, EventArgs e)
+        {
+            // Check the current Bluetooth state of the phone
+            if (CrossBluetoothLE.Current.State == BluetoothState.Off)
+            {
+                // Show an alert if the phone's Bluetooth is turned off
+                await DisplayAlert("Bluetooth Disabled", "Please turn Bluetooth back on to use this app.", "OK");
+
+                // Optionally, navigate back to the main page or stop scanning
+                await Navigation.PopToRootAsync();
+            }
         }
 
         // Check for BLE permission
@@ -100,7 +115,6 @@ namespace BLE_App
         {
             if (_connectedDevice != null && e.Device.Id == _connectedDevice.Id)
             {
-
                 // Navigate back to BtDevices page and display a message
                 await MainThread.InvokeOnMainThreadAsync(async () =>
                 {
@@ -166,7 +180,6 @@ namespace BLE_App
 
             // Restart the scanning process
             StartContinuousScan();
-
         }
 
         protected override async void OnDisappearing()
@@ -179,6 +192,10 @@ namespace BLE_App
                 await _bluetoothAdapter.StopScanningForDevicesAsync();
             }
 
+            // Unsubscribe from Bluetooth state changes
+            CrossBluetoothLE.Current.StateChanged -= OnBluetoothStateChanged;
         }
     }
 }
+
+
