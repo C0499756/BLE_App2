@@ -1,6 +1,6 @@
 ﻿using Plugin.BLE;
-using Plugin.BLE.Abstractions;
 using Plugin.BLE.Abstractions.Contracts;
+using Plugin.BLE.Abstractions;
 using System;
 using System.Collections.ObjectModel;
 using System.Threading.Tasks;
@@ -29,17 +29,26 @@ namespace BLE_App
             CrossBluetoothLE.Current.StateChanged += OnBluetoothStateChanged;
         }
 
-        // Handle Bluetooth state changes for the phone itself
         private async void OnBluetoothStateChanged(object sender, EventArgs e)
         {
-            // Check the current Bluetooth state of the phone
+            // Only allow scanning if Bluetooth is turned on
             if (CrossBluetoothLE.Current.State == BluetoothState.Off)
             {
-                // Show an alert if the phone's Bluetooth is turned off
                 await DisplayAlert("Bluetooth Disabled", "Please turn Bluetooth back on to use this app.", "OK");
 
-                // Optionally, navigate back to the main page or stop scanning
+                // Stop scanning or interacting with Bluetooth when it's off
+                if (_bluetoothAdapter.IsScanning)
+                {
+                    await _bluetoothAdapter.StopScanningForDevicesAsync();
+                }
+
+                // Optionally, navigate back to the root page
                 await Navigation.PopToRootAsync();
+            }
+            else if (CrossBluetoothLE.Current.State == BluetoothState.On)
+            {
+                // Restart scanning when Bluetooth is turned back on
+                StartContinuousScan();
             }
         }
 
@@ -57,9 +66,16 @@ namespace BLE_App
             return true;
         }
 
-        // Start continuous scan for Bluetooth devices
+        // Start continuous scan for Bluetooth devices only if Bluetooth is on
         private async void StartContinuousScan()
         {
+            if (CrossBluetoothLE.Current.State != BluetoothState.On)
+            {
+                // Show a message if the app tries to scan with Bluetooth off
+                await DisplayAlert("Bluetooth Off", "Please turn Bluetooth on to scan for devices.", "OK");
+                return;
+            }
+
             if (!await PermissionsGrantedAsync())
             {
                 await DisplayAlert("Permission Required", "Application Needs Location Permission", "OK");
@@ -110,20 +126,6 @@ namespace BLE_App
             }
         }
 
-        // Handle device disconnection
-        private async void OnDeviceDisconnected(object sender, Plugin.BLE.Abstractions.EventArgs.DeviceEventArgs e)
-        {
-            if (_connectedDevice != null && e.Device.Id == _connectedDevice.Id)
-            {
-                // Navigate back to BtDevices page and display a message
-                await MainThread.InvokeOnMainThreadAsync(async () =>
-                {
-                    await DisplayAlert("Bluetooth Device Disconnected", "Return to Devices Page", "OK");
-                    await Navigation.PopToRootAsync();  // Navigate back to root page (BtDevices)
-                });
-            }
-        }
-
         // Select and navigate to the Unknown Service
         private async Task SelectUnknownService(IDevice connectedDevice)
         {
@@ -164,18 +166,12 @@ namespace BLE_App
             await Navigation.PushAsync(new BtDataPage(_connectedDevice, service));
         }
 
+
         protected override async void OnAppearing()
         {
             base.OnAppearing();
 
-            // If Bluetooth is off when the page appears, show an alert
-            if (CrossBluetoothLE.Current.State == BluetoothState.Off)
-            {
-                await DisplayAlert("Bluetooth Disabled", "Please turn Bluetooth on to use this app.", "OK");
-                return;  // Stop further execution if Bluetooth is off
-            }
-
-            // If there is a connected device, disconnect when coming back to this page
+            // Disconnect the connected device when coming back to this page
             if (_connectedDevice != null && _connectedDevice.State == DeviceState.Connected)
             {
                 await _bluetoothAdapter.DisconnectDeviceAsync(_connectedDevice);
@@ -185,8 +181,11 @@ namespace BLE_App
             // Clear the list of previously found devices
             _gattDevices.Clear();
 
-            // Restart the scanning process
-            StartContinuousScan();
+            // Only start scanning if Bluetooth is on
+            if (CrossBluetoothLE.Current.State == BluetoothState.On)
+            {
+                StartContinuousScan();
+            }
         }
 
         protected override async void OnDisappearing()
@@ -202,7 +201,23 @@ namespace BLE_App
             // Unsubscribe from Bluetooth state changes
             CrossBluetoothLE.Current.StateChanged -= OnBluetoothStateChanged;
         }
+
+        // Handle device disconnection
+        private async void OnDeviceDisconnected(object sender, Plugin.BLE.Abstractions.EventArgs.DeviceEventArgs e)
+        {
+            if (_connectedDevice != null && e.Device.Id == _connectedDevice.Id)
+            {
+                // Show an alert when the connected device disconnects
+                await MainThread.InvokeOnMainThreadAsync(async () =>
+                {
+                    await DisplayAlert("Bluetooth Device Disconnected", "Returned to Devices Page", "OK");
+                    await Navigation.PopToRootAsync();  // Navigate back to the root page (BtDevices)
+                });
+            }
+        }
     }
 }
+
+
 
 
