@@ -1,6 +1,8 @@
 using System;
 using System.Threading.Tasks;
 using Microsoft.Maui.Controls;
+using Plugin.BLE;
+using Plugin.BLE.Abstractions.Contracts;
 
 
 namespace BLE_App;
@@ -12,6 +14,11 @@ public partial class PositionData : ContentPage
     public PositionData()
     {
         InitializeComponent();
+    }
+
+    protected override void OnAppearing()
+    {
+        base.OnAppearing();
         StartLocationUpdates();
         StartAccelerometer();
     }
